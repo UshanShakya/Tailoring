@@ -1,0 +1,18 @@
+{
+  "name": "tailoring-platform",
+  "version": "1.0.0",
+  "description": "Tailoring Business Management Platform",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"cyan,emerald\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "seed": "cd backend && npm run prisma:seed",
+    "db:push": "cd backend && npx prisma db push"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
