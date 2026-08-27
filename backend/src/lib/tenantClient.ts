@@ -29,5 +29,26 @@ export function forBusiness(businessId: string) {
           data,
         }),
     },
+    customer: {
+      findMany: (args: Prisma.CustomerFindManyArgs = {}) =>
+        prisma.customer.findMany({
+          ...args,
+          where: { ...args.where, businessId },
+        }),
+      findFirst: (args: Prisma.CustomerFindFirstArgs = {}) =>
+        prisma.customer.findFirst({
+          ...args,
+          where: { ...args.where, businessId },
+        }),
+      create: (data: Omit<Prisma.CustomerUncheckedCreateInput, 'businessId'>) =>
+        prisma.customer.create({
+          data: { ...data, businessId },
+        }),
+      update: (id: string, data: Prisma.CustomerUpdateInput) =>
+        prisma.customer.update({
+          where: { id },
+          data,
+        }),
+    },
   };
 }

@@ -16,8 +16,9 @@ model Business {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  users User[]
-  roles Role[]
+  users     User[]
+  roles     Role[]
+  customers Customer[]
 }
 
 model Role {
@@ -44,4 +45,17 @@ model User {
   role         Role      @relation(fields: [roleId], references: [id])
   isActive     Boolean   @default(true)
   createdAt    DateTime  @default(now())
+}
+
+model Customer {
+  id         String   @id @default(uuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id])
+  name       String
+  phone      String?
+  address    String?
+  notes      String?
+  createdBy  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }

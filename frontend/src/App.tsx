@@ -9,6 +9,8 @@ import { OverviewPage } from './pages/OverviewPage';
 import { SuperAdminDashboard } from './pages/admin/SuperAdminDashboard';
 import { StaffManagementPage } from './pages/staff/StaffManagementPage';
 import { RoleManagementPage } from './pages/roles/RoleManagementPage';
+import { CustomerListPage } from './pages/customers/CustomerListPage';
+import { CustomerDetailPage } from './pages/customers/CustomerDetailPage';
 
 const queryClient = new QueryClient();
 
@@ -34,6 +36,11 @@ export const App: React.FC = () => {
 
                 <Route element={<ProtectedRoute requiredPermission="menu:roles" />}>
                   <Route path="roles" element={<RoleManagementPage />} />
+                </Route>
+
+                <Route element={<ProtectedRoute requiredPermission="menu:customers" />}>
+                  <Route path="customers" element={<CustomerListPage />} />
+                  <Route path="customers/:id" element={<CustomerDetailPage />} />
                 </Route>
               </Route>
             </Route>

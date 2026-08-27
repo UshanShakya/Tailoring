@@ -6,6 +6,7 @@ import {
   Building2,
   Users,
   ShieldAlert,
+  UserCheck,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -54,6 +55,12 @@ export const Sidebar: React.FC = () => {
       to: '/dashboard/roles',
       icon: ShieldAlert,
       show: hasPermission('menu:roles'),
+    },
+    {
+      label: 'Customers',
+      to: '/dashboard/customers',
+      icon: UserCheck,
+      show: hasPermission('menu:customers'),
     },
   ];
 
