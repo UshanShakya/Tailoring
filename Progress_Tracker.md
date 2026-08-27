@@ -6,8 +6,8 @@
 
 ## Current Status
 
-**Active Milestone:** Milestone 8 — Dashboards, Audit Log, Polish
-**Overall status:** Milestone 7 Complete
+**Active Milestone:** — (All Milestones Complete)
+**Overall status:** Project Complete (Milestones 1-8 Complete)
 
 ## Milestone Overview
 
@@ -15,12 +15,12 @@
 |-----------|--------|-------|
 | 1. Foundation & Auth | Done | Built Express API, Prisma schema, Supabase Postgres connection, JWT token rotation, auth middlewares, seed script, and React login frontend. |
 | 2. Business & User Management | Done | Super Admin business management dashboard, tenant user management, staff team management UI, modal & badge UI components. |
-| 3. Customer Management | Done | Customer database model, tenant-scoped API routes with search, Customer List page, Customer Detail profile shell, add/edit modals. |
+| 3. Customer Management | Done | Customer database model, tenant-scoped API routes with search, Customer List page, Customer Detail profile shell, add/edit modals, and 3-field text search (Name, Phone, Address). |
 | 4. Garment Types & Measurement Templates | Done | Database models for GarmentType, MeasurementTemplate, TemplateField with English & Nepali (नेपाली) labels, template seed, clone & customize API, and Template Management UI. |
 | 5. Measurements | Done | Prisma Measurement model with version history, tenant-isolated API, dynamic bilingual measurement forms (English & Nepali labels), and Customer Detail measurements integration. |
-| 6. Orders | Done | Database models for Order & OrderItem, OrderStatus workflow, auto-generated order numbers (`ORD-2026-0001`), Order List page with status filter, and Order Detail workflow page. |
+| 6. Orders | Done | Database models for Order & OrderItem, OrderStatus workflow, auto-generated order numbers (`ORD-2026-0001`), Order List page with status filter, Order Detail workflow page, and Select2 customer search select. |
 | 7. Invoices & Payments | Done | Database models for Invoice & Payment, auto-generated invoice numbers (`INV-2026-0001`), order-to-invoice generator, partial payment tracking, Invoice List directory, printable invoice billing receipt, and payment history. |
-| 8. Dashboards, Audit Log, Polish | Not Started | |
+| 8. Dashboards, Audit Log, Polish | Done | `AuditLog` database model, automated audit logger utility, `/dashboard/stats` backend API, and live executive dashboard on `OverviewPage.tsx`. |
 
 _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 
@@ -56,6 +56,10 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 - [x] Prisma models: `Invoice`, `Payment`, `InvoiceStatus` enum, `PaymentMethod` enum (2026-08-27)
 - [x] `GET/POST/PATCH /invoices` & `POST /invoices/generate/:orderId` & `POST /invoices/:id/payments` API endpoints (2026-08-27)
 - [x] Frontend: Invoice List page with status filter tabs, Order Detail "+ Generate Invoice" action button, printable billing receipt view, and Record Payment modal (2026-08-27)
+- [x] Customer 3-Field Search (Name, Phone, Address) & Native Select2 Combobox component (`CustomerSearchSelect.tsx`) (2026-08-27)
+- [x] Prisma model: `AuditLog` & automated audit logger helper (`logAuditEvent`) (2026-08-27)
+- [x] Backend endpoint `GET /dashboard/stats` (2026-08-27)
+- [x] Frontend: Upgraded Overview Dashboard (`OverviewPage.tsx`) with active metrics, revenue totals, outstanding balance due, quick action shortcuts, and live Audit Trail Activity feed (2026-08-27)
 
 ## In Progress
 
@@ -63,10 +67,7 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 
 ## Left / Up Next
 
-- Prisma model: `AuditLog`
-- Audit log middleware / helper (tracks user actions: payment recorded, order status changed, user created)
-- Business Admin overview dashboard (pending orders summary, revenue metrics, outstanding payments widget, recent audit activity)
-- Final end-to-end verification
+- Project complete!
 
 ## Blockers / Open Questions
 
@@ -85,3 +86,5 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 | 2026-08-27 | Built Milestone 5 (Measurements). Implemented Measurement model with versioning, tenant-isolated API endpoints, dynamic bilingual (English & Nepali) measurement recording modal, and Customer Detail measurements history viewer. |
 | 2026-08-27 | Built Milestone 6 (Orders). Implemented Order and OrderItem database models, auto-generated order numbers (`ORD-2026-0001`), order status workflow state machine, Order List page with status filter, and Order Detail workflow page. |
 | 2026-08-27 | Built Milestone 7 (Invoices & Payments). Implemented Invoice and Payment database models, order-to-invoice generator, partial payment tracking with status recalculation, printable billing receipts, and payment history. |
+| 2026-08-27 | Added 3-field text search for Customers (Name, Phone, Address) & native Select2 combobox component (`CustomerSearchSelect.tsx`). |
+| 2026-08-27 | Built Milestone 8 (Dashboards, Audit Log, Polish). Created AuditLog database model, automated audit logger, backend dashboard stats API, and live executive command center dashboard with real-time metrics and audit trail activity feed. |

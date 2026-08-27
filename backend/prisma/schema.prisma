@@ -48,6 +48,7 @@ model Business {
   orders               Order[]
   invoices             Invoice[]
   payments             Payment[]
+  auditLogs            AuditLog[]
 }
 
 model Role {
@@ -213,4 +214,17 @@ model Payment {
   referenceNote String?
   recordedBy    String
   createdAt     DateTime      @default(now())
+}
+
+model AuditLog {
+  id          String    @id @default(uuid())
+  businessId  String?
+  business    Business? @relation(fields: [businessId], references: [id])
+  userId      String?
+  actorEmail  String
+  action      String    // e.g. "ORDER_CREATED", "ORDER_STATUS_UPDATED", "PAYMENT_RECORDED", "STAFF_CREATED"
+  entityType  String    // "Order", "Payment", "User", "Business", "Customer", "Template"
+  entityId    String?
+  details     Json?
+  createdAt   DateTime  @default(now())
 }

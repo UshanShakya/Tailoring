@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { OrderStatus } from '@prisma/client';
 import prisma from '../../lib/prisma';
 import { forBusiness } from '../../lib/tenantClient';
+import { logAuditEvent } from '../../lib/auditLogger';
 
 export const orderItemSchema = z.object({
   garmentTypeId: z.string().min(1, 'Garment type is required'),
@@ -112,7 +113,7 @@ export async function createOrder(
 
   const orderNumber = await generateOrderNumber(businessId);
 
-  return prisma.order.create({
+  const order = await prisma.order.create({
     data: {
       businessId,
       customerId: input.customerId,
@@ -133,13 +134,34 @@ export async function createOrder(
       },
     },
   });
+
+  // Log Audit Event
+  await logAuditEvent({
+    businessId,
+    actorEmail: createdById,
+    action: 'ORDER_CREATED',
+    entityType: 'Order',
+    entityId: order.id,
+    details: {
+      orderNumber: order.orderNumber,
+      customerName: customer.name,
+      totalAmount: Number(order.totalAmount),
+    },
+  });
+
+  return order;
 }
 
 // Update Order Status along state workflow
-export async function updateOrderStatus(businessId: string, orderId: string, status: OrderStatus) {
+export async function updateOrderStatus(
+  businessId: string,
+  orderId: string,
+  status: OrderStatus,
+  actorEmail: string = 'system'
+) {
   const order = await getOrderById(businessId, orderId);
 
-  return prisma.order.update({
+  const updated = await prisma.order.update({
     where: { id: order.id },
     data: { status },
     include: {
@@ -149,4 +171,20 @@ export async function updateOrderStatus(businessId: string, orderId: string, sta
       },
     },
   });
+
+  // Log Audit Event
+  await logAuditEvent({
+    businessId,
+    actorEmail,
+    action: 'ORDER_STATUS_UPDATED',
+    entityType: 'Order',
+    entityId: updated.id,
+    details: {
+      orderNumber: updated.orderNumber,
+      previousStatus: order.status,
+      newStatus: status,
+    },
+  });
+
+  return updated;
 }

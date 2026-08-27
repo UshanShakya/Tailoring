@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { InvoiceStatus, PaymentMethod } from '@prisma/client';
 import prisma from '../../lib/prisma';
 import { getOrderById } from '../orders/orders.service';
+import { logAuditEvent } from '../../lib/auditLogger';
 
 export const recordPaymentSchema = z.object({
   amount: z.number().positive('Payment amount must be greater than 0'),
@@ -83,7 +84,7 @@ export async function getInvoiceById(businessId: string, invoiceId: string) {
 }
 
 // Generate Invoice from Order
-export async function generateInvoiceFromOrder(businessId: string, orderId: string) {
+export async function generateInvoiceFromOrder(businessId: string, orderId: string, actorEmail: string = 'system') {
   const order = await getOrderById(businessId, orderId);
 
   // Check if invoice already exists for this order
@@ -98,7 +99,7 @@ export async function generateInvoiceFromOrder(businessId: string, orderId: stri
   const invoiceNumber = await generateInvoiceNumber(businessId);
   const total = Number(order.totalAmount);
 
-  return prisma.invoice.create({
+  const invoice = await prisma.invoice.create({
     data: {
       businessId,
       orderId: order.id,
@@ -123,6 +124,22 @@ export async function generateInvoiceFromOrder(businessId: string, orderId: stri
       payments: true,
     },
   });
+
+  // Log Audit Event
+  await logAuditEvent({
+    businessId,
+    actorEmail,
+    action: 'INVOICE_GENERATED',
+    entityType: 'Invoice',
+    entityId: invoice.id,
+    details: {
+      invoiceNumber: invoice.invoiceNumber,
+      orderNumber: order.orderNumber,
+      totalAmount: total,
+    },
+  });
+
+  return invoice;
 }
 
 // Record Payment Against Invoice
@@ -143,7 +160,7 @@ export async function recordPayment(
     };
   }
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     // 1. Create Payment record
     const payment = await tx.payment.create({
       data: {
@@ -192,4 +209,22 @@ export async function recordPayment(
 
     return { payment, invoice: updatedInvoice };
   });
+
+  // Log Audit Event
+  await logAuditEvent({
+    businessId,
+    actorEmail: recordedBy,
+    action: 'PAYMENT_RECORDED',
+    entityType: 'Payment',
+    entityId: result.payment.id,
+    details: {
+      invoiceNumber: invoice.invoiceNumber,
+      paymentAmount: input.amount,
+      method: input.method,
+      newDueBalance: Number(result.invoice.dueAmount),
+      status: result.invoice.status,
+    },
+  });
+
+  return result;
 }
