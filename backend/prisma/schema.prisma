@@ -16,9 +16,11 @@ model Business {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  users     User[]
-  roles     Role[]
-  customers Customer[]
+  users                User[]
+  roles                Role[]
+  customers            Customer[]
+  garmentTypes         GarmentType[]
+  measurementTemplates MeasurementTemplate[]
 }
 
 model Role {
@@ -58,4 +60,43 @@ model Customer {
   createdBy  String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+model GarmentType {
+  id              String   @id @default(uuid())
+  businessId      String?  // null = system default, visible to all businesses
+  business        Business? @relation(fields: [businessId], references: [id])
+  name            String   // e.g. "Shirt", "Trousers", "Suit", "Kurta"
+  nameNp          String?  // e.g. "सर्ट", "प्यान्ट", "सूट", "कुर्ता"
+  isSystemDefault Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  templates       MeasurementTemplate[]
+}
+
+model MeasurementTemplate {
+  id              String   @id @default(uuid())
+  businessId      String?  // null = system default
+  business        Business? @relation(fields: [businessId], references: [id])
+  garmentTypeId   String
+  garmentType     GarmentType @relation(fields: [garmentTypeId], references: [id])
+  name            String   // e.g. "Standard Shirt Template"
+  nameNp          String?  // e.g. "साधारण सर्ट नाप ढाँचा"
+  isSystemDefault Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  fields          TemplateField[]
+}
+
+model TemplateField {
+  id          String   @id @default(uuid())
+  templateId  String
+  template    MeasurementTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  label       String   // "Chest", "Shoulder", "Sleeve Length"
+  labelNp     String?  // "छाती", "काँध", "हातको लम्बाइ"
+  key         String   // "chest", "shoulder", "sleeveLength" — used as JSON key
+  unit        String   // "in", "cm"
+  dataType    String   // "number" | "text"
+  order       Int
+  required    Boolean  @default(true)
 }

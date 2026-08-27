@@ -11,6 +11,7 @@ import { StaffManagementPage } from './pages/staff/StaffManagementPage';
 import { RoleManagementPage } from './pages/roles/RoleManagementPage';
 import { CustomerListPage } from './pages/customers/CustomerListPage';
 import { CustomerDetailPage } from './pages/customers/CustomerDetailPage';
+import { TemplateManagementPage } from './pages/templates/TemplateManagementPage';
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,10 @@ export const App: React.FC = () => {
                 <Route element={<ProtectedRoute requiredPermission="menu:customers" />}>
                   <Route path="customers" element={<CustomerListPage />} />
                   <Route path="customers/:id" element={<CustomerDetailPage />} />
+                </Route>
+
+                <Route element={<ProtectedRoute requiredPermission="menu:templates" />}>
+                  <Route path="templates" element={<TemplateManagementPage />} />
                 </Route>
               </Route>
             </Route>

@@ -6,8 +6,8 @@
 
 ## Current Status
 
-**Active Milestone:** Milestone 4 — Garment Types & Measurement Templates
-**Overall status:** Milestone 3 Complete
+**Active Milestone:** Milestone 5 — Measurements
+**Overall status:** Milestone 4 Complete
 
 ## Milestone Overview
 
@@ -16,7 +16,7 @@
 | 1. Foundation & Auth | Done | Built Express API, Prisma schema, Supabase Postgres connection, JWT token rotation, auth middlewares, seed script, and React login frontend. |
 | 2. Business & User Management | Done | Super Admin business management dashboard, tenant user management, staff team management UI, modal & badge UI components. |
 | 3. Customer Management | Done | Customer database model, tenant-scoped API routes with search, Customer List page, Customer Detail profile shell, add/edit modals. |
-| 4. Garment Types & Measurement Templates | Not Started | |
+| 4. Garment Types & Measurement Templates | Done | Database models for GarmentType, MeasurementTemplate, TemplateField with English & Nepali (नेपाली) labels, template seed, clone & customize API, and Template Management UI. |
 | 5. Measurements | Not Started | |
 | 6. Orders | Not Started | |
 | 7. Invoices & Payments | Not Started | |
@@ -43,6 +43,10 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 - [x] Tenant-scoped Prisma client wrapper for customers (2026-08-27)
 - [x] `GET/POST/PATCH /customers` & `GET /customers/:id` API endpoints with search filter (2026-08-27)
 - [x] Frontend: Customer List directory, Customer Detail profile shell, add/edit customer modals (2026-08-27)
+- [x] Prisma models: `GarmentType`, `MeasurementTemplate`, `TemplateField` with English & Nepali (`labelNp`) labels (2026-08-27)
+- [x] Seed script: standard system-default garment types & templates (Shirt, Trousers, Suit, Kurta, Blazer) with English & Nepali labels (2026-08-27)
+- [x] `GET /garment-types` & `GET/POST/PATCH /measurement-templates` & `POST /measurement-templates/clone` (2026-08-27)
+- [x] Frontend: Template Management UI with English/Nepali label editor, template viewer, and clone & customize flow (2026-08-27)
 
 ## In Progress
 
@@ -50,9 +54,10 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 
 ## Left / Up Next
 
-- Prisma models: `GarmentType`, `MeasurementTemplate`, `TemplateField`
-- Seed script: standard system-default garment types + templates (Shirt, Trousers, Suit, Kurta, Blazer)
-- `GET /garment-types` & `GET/POST/PATCH /measurement-templates`
+- Prisma model: `Measurement` (references a concrete `templateId` with JSON values and version history)
+- `POST /customers/:id/measurements` (loads template, validates values against template fields)
+- `GET /customers/:id/measurements` (history, ordered by version/date)
+- Frontend: "Add Measurement" flow — pick garment type $\rightarrow$ template fields render dynamically with English & Nepali labels $\rightarrow$ save
 
 ## Blockers / Open Questions
 
@@ -67,3 +72,4 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 | 2026-08-27 | Built Milestone 2 (Business & User Management). Implemented Super Admin business management, Business Admin staff management, Modal/Badge components, and updated routing. |
 | 2026-08-27 | Architectural Refactoring: Implemented dynamic roles, granular permission matrix, and modern collapsible sidebar. |
 | 2026-08-27 | Built Milestone 3 (Customer Management). Implemented Customer database model, tenant-isolated API routes with real-time search, Customer List directory, Customer Detail profile, and add/edit modals. |
+| 2026-08-27 | Built Milestone 4 (Garment Types & Measurement Templates). Added English & Nepali field labels, seeded 5 standard garment templates, implemented template cloning & customization API, and created Template Management UI. |

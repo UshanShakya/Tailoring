@@ -7,6 +7,7 @@ import {
   Users,
   ShieldAlert,
   UserCheck,
+  Ruler,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -61,6 +62,12 @@ export const Sidebar: React.FC = () => {
       to: '/dashboard/customers',
       icon: UserCheck,
       show: hasPermission('menu:customers'),
+    },
+    {
+      label: 'Templates',
+      to: '/dashboard/templates',
+      icon: Ruler,
+      show: hasPermission('menu:templates'),
     },
   ];
 
