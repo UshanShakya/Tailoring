@@ -130,3 +130,61 @@ one or more payments against it, and see accurate paid/unpaid status.
 
 **Milestone done when:** both dashboards are functional, the UI fully
 complies with the design tokens, and the app is deployed to a live URL.
+
+## Milestone 9 — Global UX & Application Quality of Life
+- [ ] Create reusable application TopBar component
+- [ ] Add global search to the top bar
+      - [ ] Super Admin: search across all businesses, users, customers, orders, invoices, etc. that they have permission to access
+      - [ ] Business Admin: search across their own business data only
+      - [ ] Staff: search only across resources they are authorized to access
+      - [ ] Search results must respect existing tenant and permission boundaries
+      - [ ] Search should navigate directly to the selected resource
+- [ ] Create reusable BackButton / navigation component
+      - [ ] Use browser history where appropriate
+      - [ ] Provide sensible fallback navigation when there is no usable history
+      - [ ] Use consistently on detail/create/edit pages
+- [ ] Implement application-wide theme system
+      - [ ] Light theme
+      - [ ] Dark theme
+      - [ ] Theme toggle in the top bar
+      - [ ] Persist user's selected theme
+      - [ ] Respect system theme on first visit
+      - [ ] Ensure all existing UI components support both themes
+- [ ] Establish reusable dropdown/select component
+      - [ ] Install Select2 locally rather than loading it from a CDN
+      - [ ] Create a reusable wrapper/component around Select2
+      - [ ] Replace native <select> controls throughout the application where appropriate
+      - [ ] Support single-select and multi-select where required
+      - [ ] Support clearable selections
+      - [ ] Support loading/empty/error states
+- [ ] Implement searchable Select2/API-driven selection
+      - [ ] For small/static datasets, load options normally
+      - [ ] For large datasets, do not load the entire dataset into the browser
+      - [ ] Start API searching after 3 characters
+      - [ ] Add debounce to prevent excessive API requests
+      - [ ] Add pagination/limit to API search results
+      - [ ] Show loading state while searching
+      - [ ] Ensure API searches remain tenant- and permission-scoped
+- [ ] Standardize application-wide loading, empty, and error states
+      - [ ] Review navigation and page layouts for consistency
+      - [ ] Top bar
+      - [ ] Sidebar/navigation
+      - [ ] Page headers
+      - [ ] Back navigation
+      - [ ] Action buttons
+      - [ ] Detail pages
+      - [ ] Forms
+- [ ] Implement invoice-specific print styling
+      - [ ] Printing an invoice must print only the invoice
+      - [ ] Hide sidebar, top bar, navigation, buttons, and other page content when printing
+      - [ ] Ensure invoice layout is suitable for physical printing
+      - [ ] Add appropriate @media print styles
+      - [ ] Ensure print output does not include unnecessary application UI
+- [ ] Standardize monetary display across the application
+      - [ ] Use Nepalese Rupees (NPR / Rs.)
+      - [ ] Store monetary values as appropriate numeric/decimal values, not formatted strings
+      - [ ] Create reusable currency formatting utility/component
+      - [ ] Use consistent decimal and thousand separators
+      - [ ] Use the same formatting in orders, invoices, payments, dashboards and reports
+
+Milestone done when: the application has a consistent global navigation experience with role-aware search, back navigation, light/dark themes, a reusable locally installed Select2 implementation, API-backed searching for large datasets, invoice-only printing, and consistent NPR monetary formatting.

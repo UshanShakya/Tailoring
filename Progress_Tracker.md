@@ -7,7 +7,7 @@
 ## Current Status
 
 **Active Milestone:** — (All Milestones Complete)
-**Overall status:** Project Complete (Milestones 1-8 Complete)
+**Overall status:** Project Complete (Milestones 1-9 Complete)
 
 ## Milestone Overview
 
@@ -21,6 +21,7 @@
 | 6. Orders | Done | Database models for Order & OrderItem, OrderStatus workflow, auto-generated order numbers (`ORD-2026-0001`), Order List page with status filter, Order Detail workflow page, and Select2 customer search select. |
 | 7. Invoices & Payments | Done | Database models for Invoice & Payment, auto-generated invoice numbers (`INV-2026-0001`), order-to-invoice generator, partial payment tracking, Invoice List directory, printable invoice billing receipt, and payment history. |
 | 8. Dashboards, Audit Log, Polish | Done | `AuditLog` database model, automated audit logger utility, `/dashboard/stats` backend API, and live executive dashboard on `OverviewPage.tsx`. |
+| 9. Global UX & Application Quality of Life | Done | Nepalese Rupee formatting (`Rs. 1,750.00`), Light/Dark theme system with TopBar toggle, tenant- & permission-scoped Global Search API & combobox, reusable BackButton & PageHeader, local Select2 combobox with async API search, and invoice print styles. |
 
 _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 
@@ -60,6 +61,7 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 - [x] Prisma model: `AuditLog` & automated audit logger helper (`logAuditEvent`) (2026-08-27)
 - [x] Backend endpoint `GET /dashboard/stats` (2026-08-27)
 - [x] Frontend: Upgraded Overview Dashboard (`OverviewPage.tsx`) with active metrics, revenue totals, outstanding balance due, quick action shortcuts, and live Audit Trail Activity feed (2026-08-27)
+- [x] Milestone 9: Currency standardization to Nepalese Rupees (`Rs. 1,750.00`), Light/Dark theme system with TopBar toggle, tenant- & permission-scoped Global Search API & popup combobox, reusable BackButton & PageHeader, local Select2 combobox with async API search, and invoice print styles (2026-08-27)
 
 ## In Progress
 
@@ -88,3 +90,4 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 | 2026-08-27 | Built Milestone 7 (Invoices & Payments). Implemented Invoice and Payment database models, order-to-invoice generator, partial payment tracking with status recalculation, printable billing receipts, and payment history. |
 | 2026-08-27 | Added 3-field text search for Customers (Name, Phone, Address) & native Select2 combobox component (`CustomerSearchSelect.tsx`). |
 | 2026-08-27 | Built Milestone 8 (Dashboards, Audit Log, Polish). Created AuditLog database model, automated audit logger, backend dashboard stats API, and live executive command center dashboard with real-time metrics and audit trail activity feed. |
+| 2026-08-27 | Built Milestone 9 (Global UX & Application Quality of Life). Implemented Nepalese Rupee currency formatting (`Rs. 1,750.00`), Light/Dark theme system with TopBar toggle, permission-scoped Global Search API, reusable BackButton & PageHeader, local Select2 combobox with async API search, and invoice print styles. |

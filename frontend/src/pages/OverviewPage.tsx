@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { fetchWithAuth } from '../lib/api';
+import { formatCurrency } from '../lib/currency';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -145,7 +146,7 @@ export const OverviewPage: React.FC = () => {
           </div>
           <div className="mt-3">
             <span className="text-2xl font-bold font-mono text-success">
-              ${isLoading ? '...' : (stats?.totalRevenue || 0).toFixed(2)}
+              {isLoading ? '...' : formatCurrency(stats?.totalRevenue)}
             </span>
             <p className="text-[11px] text-muted mt-1 flex items-center gap-1">
               Total payment deposits received <ArrowRight className="w-3 h-3 text-teal" />
@@ -163,7 +164,7 @@ export const OverviewPage: React.FC = () => {
           </div>
           <div className="mt-3">
             <span className={`text-2xl font-bold font-mono ${(stats?.outstandingDue || 0) > 0 ? 'text-error' : 'text-success'}`}>
-              ${isLoading ? '...' : (stats?.outstandingDue || 0).toFixed(2)}
+              {isLoading ? '...' : formatCurrency(stats?.outstandingDue)}
             </span>
             <p className="text-[11px] text-muted mt-1 flex items-center gap-1">
               View pending billing receipts <ArrowRight className="w-3 h-3 text-teal" />

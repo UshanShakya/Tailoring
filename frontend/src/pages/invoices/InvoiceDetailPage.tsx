@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { fetchWithAuth } from '../../lib/api';
+import { formatCurrency } from '../../lib/currency';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
+import { PageHeader } from '../../components/ui/PageHeader';
+import { Select2Combobox } from '../../components/ui/Select2Combobox';
 import {
-  ArrowLeft,
   User,
   Plus,
   Printer,
@@ -153,43 +155,44 @@ export const InvoiceDetailPage: React.FC = () => {
     );
   }
 
+  const paymentMethodOptions = [
+    { value: 'CASH', label: 'Cash Payment' },
+    { value: 'BANK_TRANSFER', label: 'Bank Direct Transfer' },
+    { value: 'CARD', label: 'Debit / Credit Card' },
+    { value: 'MOBILE_WALLET', label: 'Mobile Wallet / QR Code' },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Top Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4 print:hidden">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="secondary"
-            className="px-2.5 py-1 text-xs"
-            onClick={() => navigate('/dashboard/invoices')}
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold text-ink font-mono">{invoice.invoiceNumber}</h2>
-              {getStatusBadge(invoice.status)}
-            </div>
-            <p className="text-xs text-muted">Ref Order: {invoice.order?.orderNumber}</p>
+      {/* Page Header */}
+      <PageHeader
+        showBack
+        backFallbackRoute="/dashboard/invoices"
+        title={
+          <div className="flex items-center gap-2">
+            <span className="font-mono">{invoice.invoiceNumber}</span>
+            {getStatusBadge(invoice.status)}
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            className="gap-2 text-xs"
-            onClick={() => window.print()}
-          >
-            <Printer className="w-4 h-4 text-teal" /> Print Invoice Receipt
-          </Button>
-
-          {canRecordPayment && Number(invoice.dueAmount) > 0 && (
-            <Button onClick={() => setIsPaymentOpen(true)} className="gap-2 text-xs">
-              <Plus className="w-4 h-4" /> Record Payment
+        }
+        subtitle={`Ref Order: ${invoice.order?.orderNumber}`}
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              className="gap-2 text-xs"
+              onClick={() => window.print()}
+            >
+              <Printer className="w-4 h-4 text-teal" /> Print Invoice Receipt
             </Button>
-          )}
-        </div>
-      </div>
+
+            {canRecordPayment && Number(invoice.dueAmount) > 0 && (
+              <Button onClick={() => setIsPaymentOpen(true)} className="gap-2 text-xs">
+                <Plus className="w-4 h-4" /> Record Payment
+              </Button>
+            )}
+          </>
+        }
+      />
 
       {/* Printable Invoice Container */}
       <Card className="p-8 space-y-6 bg-surface print:shadow-none print:border-none">
@@ -251,8 +254,8 @@ export const InvoiceDetailPage: React.FC = () => {
                     {it.fabricNotes && <p className="text-[11px] font-normal text-muted italic">Fabric: {it.fabricNotes}</p>}
                   </td>
                   <td className="p-3 text-center font-mono font-bold">{it.quantity}</td>
-                  <td className="p-3 text-right font-mono text-muted">${Number(it.unitPrice).toFixed(2)}</td>
-                  <td className="p-3 text-right font-mono font-bold text-teal">${Number(it.totalPrice).toFixed(2)}</td>
+                  <td className="p-3 text-right font-mono text-muted">{formatCurrency(it.unitPrice)}</td>
+                  <td className="p-3 text-right font-mono font-bold text-teal">{formatCurrency(it.totalPrice)}</td>
                 </tr>
               ))}
             </tbody>
@@ -264,16 +267,16 @@ export const InvoiceDetailPage: React.FC = () => {
           <div className="w-full max-w-xs space-y-2 text-xs border-t border-border pt-4">
             <div className="flex justify-between text-muted">
               <span>Subtotal Amount:</span>
-              <span className="font-mono text-ink">${Number(invoice.totalAmount).toFixed(2)}</span>
+              <span className="font-mono text-ink">{formatCurrency(invoice.totalAmount)}</span>
             </div>
             <div className="flex justify-between text-muted">
               <span>Paid Deposits / Payments:</span>
-              <span className="font-mono text-success font-semibold">-${Number(invoice.paidAmount).toFixed(2)}</span>
+              <span className="font-mono text-success font-semibold">-{formatCurrency(invoice.paidAmount)}</span>
             </div>
             <div className="flex justify-between text-sm font-bold border-t border-border pt-2 text-ink">
               <span>Remaining Balance Due:</span>
               <span className={`font-mono ${Number(invoice.dueAmount) > 0 ? 'text-error' : 'text-success'}`}>
-                ${Number(invoice.dueAmount).toFixed(2)}
+                {formatCurrency(invoice.dueAmount)}
               </span>
             </div>
           </div>
@@ -281,7 +284,7 @@ export const InvoiceDetailPage: React.FC = () => {
       </Card>
 
       {/* Payment History Section */}
-      <Card className="p-6 space-y-4">
+      <Card className="p-6 space-y-4 print:hidden">
         <h3 className="text-sm font-semibold text-ink flex items-center gap-2">
           <CreditCard className="w-4 h-4 text-teal" /> Recorded Payment History ({invoice.payments?.length || 0})
         </h3>
@@ -308,7 +311,7 @@ export const InvoiceDetailPage: React.FC = () => {
                       <Badge variant="teal">{p.method.replace('_', ' ')}</Badge>
                     </td>
                     <td className="px-4 py-2.5 text-right font-mono font-bold text-success">
-                      +${Number(p.amount).toFixed(2)}
+                      +{formatCurrency(p.amount)}
                     </td>
                     <td className="px-4 py-2.5 text-muted">{p.recordedBy}</td>
                     <td className="px-4 py-2.5 text-muted italic">{p.referenceNote || '—'}</td>
@@ -324,7 +327,7 @@ export const InvoiceDetailPage: React.FC = () => {
       <Modal isOpen={isPaymentOpen} onClose={() => setIsPaymentOpen(false)} title="Record Payment">
         <form onSubmit={handleRecordPayment} className="space-y-4">
           <Input
-            label="Payment Amount ($)"
+            label="Payment Amount (NPR / Rs.)"
             type="number"
             min="0.01"
             max={Number(invoice.dueAmount)}
@@ -334,22 +337,13 @@ export const InvoiceDetailPage: React.FC = () => {
             required
           />
 
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
-              Payment Method
-            </label>
-            <select
-              value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value as any)}
-              className="w-full bg-surface border border-border text-ink rounded-md p-2.5 text-xs focus:outline-none focus:border-teal"
-              required
-            >
-              <option value="CASH">Cash</option>
-              <option value="BANK_TRANSFER">Bank Transfer</option>
-              <option value="CARD">Debit / Credit Card</option>
-              <option value="MOBILE_WALLET">Mobile Wallet / QR Payment</option>
-            </select>
-          </div>
+          <Select2Combobox
+            label="Payment Method"
+            options={paymentMethodOptions}
+            value={paymentMethod}
+            onChange={(val) => setPaymentMethod(val as any)}
+            required
+          />
 
           <Input
             label="Reference Note / Transaction ID"

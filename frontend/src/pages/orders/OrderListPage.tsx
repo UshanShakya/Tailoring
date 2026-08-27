@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { fetchWithAuth } from '../../lib/api';
+import { formatCurrency } from '../../lib/currency';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
@@ -296,7 +297,7 @@ export const OrderListPage: React.FC = () => {
                       <Scissors className="w-3.5 h-3.5 text-teal" /> Items ({o.items?.length || 0}):
                     </span>
                     <span className="font-mono font-bold text-teal text-sm">
-                      ${Number(o.totalAmount).toFixed(2)}
+                      {formatCurrency(o.totalAmount)}
                     </span>
                   </div>
 
@@ -306,7 +307,7 @@ export const OrderListPage: React.FC = () => {
                         <span>
                           {it.quantity}x {it.garmentType?.name}
                         </span>
-                        <span className="font-mono">${Number(it.totalPrice).toFixed(2)}</span>
+                        <span className="font-mono">{formatCurrency(it.totalPrice)}</span>
                       </div>
                     ))}
                     {o.items?.length > 3 && (
@@ -462,7 +463,7 @@ export const OrderListPage: React.FC = () => {
 
             <div className="p-3 bg-teal/10 border border-teal/20 rounded-md flex items-center justify-between text-xs font-semibold text-ink">
               <span>Total Calculated Amount:</span>
-              <span className="text-teal font-mono text-sm">${totalCalculated.toFixed(2)}</span>
+              <span className="text-teal font-mono text-sm">{formatCurrency(totalCalculated)}</span>
             </div>
           </div>
 

@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { fetchWithAuth } from '../../lib/api';
+import { formatCurrency } from '../../lib/currency';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { PageHeader } from '../../components/ui/PageHeader';
 import {
-  ArrowLeft,
   User,
   Phone,
   Calendar,
@@ -156,98 +157,89 @@ export const OrderDetailPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Back Button & Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="secondary"
-            className="px-2.5 py-1 text-xs"
-            onClick={() => navigate('/dashboard/orders')}
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold text-ink font-mono">{order.orderNumber}</h2>
-              {getStatusBadge(order.status)}
-            </div>
-            <p className="text-xs text-muted">
-              Created on {new Date(order.createdAt).toLocaleDateString()}
-            </p>
+      {/* Page Header */}
+      <PageHeader
+        showBack
+        backFallbackRoute="/dashboard/orders"
+        title={
+          <div className="flex items-center gap-2 font-mono">
+            <span>{order.orderNumber}</span>
+            {getStatusBadge(order.status)}
           </div>
-        </div>
-
-        {/* Workflow Transition & Invoice Buttons */}
-        <div className="flex items-center gap-2">
-          {canInvoice && order.status !== 'CANCELLED' && (
-            <Button
-              variant="outline"
-              isLoading={isGeneratingInvoice}
-              onClick={handleGenerateInvoice}
-              className="gap-1.5 text-xs text-teal border-teal/40 hover:bg-teal/10"
-            >
-              <Receipt className="w-4 h-4" /> Generate Invoice
-            </Button>
-          )}
-
-          {canEdit && order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
-            <>
-              {order.status === 'DRAFT' && (
-                <Button
-                  isLoading={isUpdatingStatus}
-                  onClick={() => handleUpdateStatus('CONFIRMED')}
-                  className="gap-1 text-xs"
-                >
-                  <CheckCircle2 className="w-4 h-4" /> Confirm Order
-                </Button>
-              )}
-
-              {order.status === 'CONFIRMED' && (
-                <Button
-                  isLoading={isUpdatingStatus}
-                  onClick={() => handleUpdateStatus('IN_PROGRESS')}
-                  className="gap-1 text-xs"
-                >
-                  <Play className="w-4 h-4" /> Start Production
-                </Button>
-              )}
-
-              {order.status === 'IN_PROGRESS' && (
-                <Button
-                  isLoading={isUpdatingStatus}
-                  onClick={() => handleUpdateStatus('READY')}
-                  className="gap-1 text-xs"
-                >
-                  <PackageCheck className="w-4 h-4" /> Mark Ready for Pickup
-                </Button>
-              )}
-
-              {order.status === 'READY' && (
-                <Button
-                  isLoading={isUpdatingStatus}
-                  onClick={() => handleUpdateStatus('DELIVERED')}
-                  className="gap-1 text-xs"
-                >
-                  <Truck className="w-4 h-4" /> Mark Delivered
-                </Button>
-              )}
-
+        }
+        subtitle={`Created on ${new Date(order.createdAt).toLocaleDateString()}`}
+        actions={
+          <>
+            {canInvoice && order.status !== 'CANCELLED' && (
               <Button
                 variant="outline"
-                isLoading={isUpdatingStatus}
-                onClick={() => {
-                  if (confirm('Are you sure you want to cancel this order?')) {
-                    handleUpdateStatus('CANCELLED');
-                  }
-                }}
-                className="gap-1 text-xs text-error hover:bg-error/10"
+                isLoading={isGeneratingInvoice}
+                onClick={handleGenerateInvoice}
+                className="gap-1.5 text-xs text-teal border-teal/40 hover:bg-teal/10"
               >
-                <XCircle className="w-4 h-4" /> Cancel
+                <Receipt className="w-4 h-4" /> Generate Invoice
               </Button>
-            </>
-          )}
-        </div>
-      </div>
+            )}
+
+            {canEdit && order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
+              <>
+                {order.status === 'DRAFT' && (
+                  <Button
+                    isLoading={isUpdatingStatus}
+                    onClick={() => handleUpdateStatus('CONFIRMED')}
+                    className="gap-1 text-xs"
+                  >
+                    <CheckCircle2 className="w-4 h-4" /> Confirm Order
+                  </Button>
+                )}
+
+                {order.status === 'CONFIRMED' && (
+                  <Button
+                    isLoading={isUpdatingStatus}
+                    onClick={() => handleUpdateStatus('IN_PROGRESS')}
+                    className="gap-1 text-xs"
+                  >
+                    <Play className="w-4 h-4" /> Start Production
+                  </Button>
+                )}
+
+                {order.status === 'IN_PROGRESS' && (
+                  <Button
+                    isLoading={isUpdatingStatus}
+                    onClick={() => handleUpdateStatus('READY')}
+                    className="gap-1 text-xs"
+                  >
+                    <PackageCheck className="w-4 h-4" /> Mark Ready for Pickup
+                  </Button>
+                )}
+
+                {order.status === 'READY' && (
+                  <Button
+                    isLoading={isUpdatingStatus}
+                    onClick={() => handleUpdateStatus('DELIVERED')}
+                    className="gap-1 text-xs"
+                  >
+                    <Truck className="w-4 h-4" /> Mark Delivered
+                  </Button>
+                )}
+
+                <Button
+                  variant="outline"
+                  isLoading={isUpdatingStatus}
+                  onClick={() => {
+                    if (confirm('Are you sure you want to cancel this order?')) {
+                      handleUpdateStatus('CANCELLED');
+                    }
+                  }}
+                  className="gap-1 text-xs text-error hover:bg-error/10"
+                >
+                  <XCircle className="w-4 h-4" /> Cancel
+                </Button>
+              </>
+            )}
+          </>
+        }
+      />
 
       {/* Production Workflow Progression Bar */}
       {order.status !== 'CANCELLED' && (
@@ -348,9 +340,9 @@ export const OrderDetailPage: React.FC = () => {
                     {it.garmentType?.nameNp && <span className="text-teal font-normal text-[11px]">({it.garmentType.nameNp})</span>}
                   </td>
                   <td className="px-4 py-3 text-center font-mono font-bold">{it.quantity}</td>
-                  <td className="px-4 py-3 text-right font-mono text-muted">${Number(it.unitPrice).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-right font-mono text-muted">{formatCurrency(it.unitPrice)}</td>
                   <td className="px-4 py-3 text-right font-mono font-bold text-teal">
-                    ${Number(it.totalPrice).toFixed(2)}
+                    {formatCurrency(it.totalPrice)}
                   </td>
                   <td className="px-4 py-3 text-muted space-y-0.5">
                     {it.fabricNotes && <div>Cloth: <span className="text-ink font-medium">{it.fabricNotes}</span></div>}
@@ -374,7 +366,7 @@ export const OrderDetailPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
             <span className="text-xs uppercase font-semibold text-muted">Total Order Amount:</span>
-            <span className="text-lg font-mono font-bold text-teal">${Number(order.totalAmount).toFixed(2)}</span>
+            <span className="text-lg font-mono font-bold text-teal">{formatCurrency(order.totalAmount)}</span>
           </div>
         </div>
       </Card>

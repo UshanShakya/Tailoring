@@ -2,8 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
+:root, [data-theme="dark"] {
+  --color-ink: #F0EFEA;
+  --color-canvas: #0F1216;
+  --color-surface: #171C22;
+  --color-teal: #368F78;
+  --color-teal-dark: #2A6E5C;
+  --color-brass: #D4A366;
+  --color-border: #262D37;
+  --color-muted: #8E99A8;
+  --color-success: #3EB882;
+  --color-warning: #E5984A;
+  --color-error: #E5534B;
+}
+
+[data-theme="light"] {
+  --color-ink: #1A1A1A;
+  --color-canvas: #FAFAF8;
+  --color-surface: #FFFFFF;
+  --color-teal: #2F6F5E;
+  --color-teal-dark: #234F43;
+  --color-brass: #C99A5B;
+  --color-border: #E5E3DE;
+  --color-muted: #6B6B66;
+  --color-success: #3A7D5C;
+  --color-warning: #C97A3D;
+  --color-error: #B3453A;
+}
+
 @layer base {
   body {
-    @apply bg-canvas text-ink antialiased font-sans min-h-screen selection:bg-teal selection:text-canvas;
+    @apply bg-canvas text-ink antialiased font-sans min-h-screen selection:bg-teal selection:text-canvas transition-colors duration-150;
+  }
+}
+
+/* Print Styles: Hides non-printable UI elements */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+
+  .print\:border-none {
+    border: none !important;
   }
 }

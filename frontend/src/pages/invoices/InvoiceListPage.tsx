@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchWithAuth } from '../../lib/api';
+import { formatCurrency } from '../../lib/currency';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import {
@@ -160,13 +161,13 @@ export const InvoiceListPage: React.FC = () => {
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <div className="p-2 bg-canvas rounded border border-border">
                       <span className="text-[10px] text-muted block">Total Amount</span>
-                      <span className="font-mono font-bold text-ink text-xs">${Number(inv.totalAmount).toFixed(2)}</span>
+                      <span className="font-mono font-bold text-ink text-xs">{formatCurrency(inv.totalAmount)}</span>
                     </div>
 
                     <div className="p-2 bg-canvas rounded border border-border">
                       <span className="text-[10px] text-muted block">Balance Due</span>
                       <span className={`font-mono font-bold text-xs ${Number(inv.dueAmount) > 0 ? 'text-error' : 'text-success'}`}>
-                        ${Number(inv.dueAmount).toFixed(2)}
+                        {formatCurrency(inv.dueAmount)}
                       </span>
                     </div>
                   </div>

@@ -10,6 +10,7 @@ import measurementsRoutes from './modules/measurements/measurements.routes';
 import ordersRoutes from './modules/orders/orders.routes';
 import invoicesRoutes from './modules/invoices/invoices.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
+import searchRoutes from './modules/search/search.routes';
 import { adminUsersRouter, tenantUsersRouter } from './modules/users/users.routes';
 
 dotenv.config();
@@ -30,6 +31,7 @@ app.use('/customers', customersRoutes);
 app.use('/orders', ordersRoutes);
 app.use('/invoices', invoicesRoutes);
 app.use('/dashboard', dashboardRoutes);
+app.use('/search', searchRoutes);
 app.use('/', templatesRoutes);
 app.use('/', measurementsRoutes);
 

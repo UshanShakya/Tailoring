@@ -6,13 +6,13 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { Badge } from '../../components/ui/Badge';
 import {
   User,
   Phone,
   MapPin,
   Edit3,
-  ArrowLeft,
   Ruler,
   ShoppingBag,
   Calendar,
@@ -205,30 +205,24 @@ export const CustomerDetailPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Back Button & Header Banner */}
-      <div className="flex items-center justify-between border-b border-border pb-4">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="secondary"
-            className="px-2.5 py-1 text-xs"
-            onClick={() => navigate('/dashboard/customers')}
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div>
-            <h2 className="text-xl font-semibold text-ink flex items-center gap-2">
-              <User className="w-5 h-5 text-teal" /> {customer.name}
-            </h2>
-            <p className="text-xs text-muted">Customer ID: {customer.id}</p>
-          </div>
-        </div>
-
-        {canEdit && (
-          <Button onClick={() => setIsEditOpen(true)} className="gap-2 text-xs">
-            <Edit3 className="w-4 h-4" /> Edit Profile
-          </Button>
-        )}
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        showBack
+        backFallbackRoute="/dashboard/customers"
+        title={
+          <span className="flex items-center gap-2">
+            <User className="w-5 h-5 text-teal" /> {customer.name}
+          </span>
+        }
+        subtitle={`Customer ID: ${customer.id}`}
+        actions={
+          canEdit && (
+            <Button onClick={() => setIsEditOpen(true)} className="gap-2 text-xs">
+              <Edit3 className="w-4 h-4" /> Edit Profile
+            </Button>
+          )
+        }
+      />
 
       {/* Profile Overview Card */}
       <Card className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
