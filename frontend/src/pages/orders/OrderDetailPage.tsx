@@ -17,6 +17,7 @@ import {
   XCircle,
   Scissors,
   FileText,
+  Receipt,
 } from 'lucide-react';
 
 interface GarmentTypeItem {
@@ -62,9 +63,11 @@ export const OrderDetailPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
 
   const perms = user?.role?.permissions || [];
   const canEdit = perms.includes('*') || perms.includes('order:edit') || perms.includes('order:*');
+  const canInvoice = perms.includes('*') || perms.includes('invoice:create') || perms.includes('invoice:*');
 
   const loadOrder = async () => {
     if (!id) return;
@@ -96,6 +99,21 @@ export const OrderDetailPage: React.FC = () => {
       alert(err.message || 'Failed to update order status');
     } finally {
       setIsUpdatingStatus(false);
+    }
+  };
+
+  const handleGenerateInvoice = async () => {
+    if (!id) return;
+    setIsGeneratingInvoice(true);
+    try {
+      const invoice = await fetchWithAuth<any>(`/invoices/generate/${id}`, {
+        method: 'POST',
+      });
+      navigate(`/dashboard/invoices/${invoice.id}`);
+    } catch (err: any) {
+      alert(err.message || 'Failed to generate invoice');
+    } finally {
+      setIsGeneratingInvoice(false);
     }
   };
 
@@ -159,63 +177,76 @@ export const OrderDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Workflow Transition Buttons */}
-        {canEdit && order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
-          <div className="flex items-center gap-2">
-            {order.status === 'DRAFT' && (
-              <Button
-                isLoading={isUpdatingStatus}
-                onClick={() => handleUpdateStatus('CONFIRMED')}
-                className="gap-1 text-xs"
-              >
-                <CheckCircle2 className="w-4 h-4" /> Confirm Order
-              </Button>
-            )}
-
-            {order.status === 'CONFIRMED' && (
-              <Button
-                isLoading={isUpdatingStatus}
-                onClick={() => handleUpdateStatus('IN_PROGRESS')}
-                className="gap-1 text-xs"
-              >
-                <Play className="w-4 h-4" /> Start Production
-              </Button>
-            )}
-
-            {order.status === 'IN_PROGRESS' && (
-              <Button
-                isLoading={isUpdatingStatus}
-                onClick={() => handleUpdateStatus('READY')}
-                className="gap-1 text-xs"
-              >
-                <PackageCheck className="w-4 h-4" /> Mark Ready for Pickup
-              </Button>
-            )}
-
-            {order.status === 'READY' && (
-              <Button
-                isLoading={isUpdatingStatus}
-                onClick={() => handleUpdateStatus('DELIVERED')}
-                className="gap-1 text-xs"
-              >
-                <Truck className="w-4 h-4" /> Mark Delivered
-              </Button>
-            )}
-
+        {/* Workflow Transition & Invoice Buttons */}
+        <div className="flex items-center gap-2">
+          {canInvoice && order.status !== 'CANCELLED' && (
             <Button
               variant="outline"
-              isLoading={isUpdatingStatus}
-              onClick={() => {
-                if (confirm('Are you sure you want to cancel this order?')) {
-                  handleUpdateStatus('CANCELLED');
-                }
-              }}
-              className="gap-1 text-xs text-error hover:bg-error/10"
+              isLoading={isGeneratingInvoice}
+              onClick={handleGenerateInvoice}
+              className="gap-1.5 text-xs text-teal border-teal/40 hover:bg-teal/10"
             >
-              <XCircle className="w-4 h-4" /> Cancel Order
+              <Receipt className="w-4 h-4" /> Generate Invoice
             </Button>
-          </div>
-        )}
+          )}
+
+          {canEdit && order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
+            <>
+              {order.status === 'DRAFT' && (
+                <Button
+                  isLoading={isUpdatingStatus}
+                  onClick={() => handleUpdateStatus('CONFIRMED')}
+                  className="gap-1 text-xs"
+                >
+                  <CheckCircle2 className="w-4 h-4" /> Confirm Order
+                </Button>
+              )}
+
+              {order.status === 'CONFIRMED' && (
+                <Button
+                  isLoading={isUpdatingStatus}
+                  onClick={() => handleUpdateStatus('IN_PROGRESS')}
+                  className="gap-1 text-xs"
+                >
+                  <Play className="w-4 h-4" /> Start Production
+                </Button>
+              )}
+
+              {order.status === 'IN_PROGRESS' && (
+                <Button
+                  isLoading={isUpdatingStatus}
+                  onClick={() => handleUpdateStatus('READY')}
+                  className="gap-1 text-xs"
+                >
+                  <PackageCheck className="w-4 h-4" /> Mark Ready for Pickup
+                </Button>
+              )}
+
+              {order.status === 'READY' && (
+                <Button
+                  isLoading={isUpdatingStatus}
+                  onClick={() => handleUpdateStatus('DELIVERED')}
+                  className="gap-1 text-xs"
+                >
+                  <Truck className="w-4 h-4" /> Mark Delivered
+                </Button>
+              )}
+
+              <Button
+                variant="outline"
+                isLoading={isUpdatingStatus}
+                onClick={() => {
+                  if (confirm('Are you sure you want to cancel this order?')) {
+                    handleUpdateStatus('CANCELLED');
+                  }
+                }}
+                className="gap-1 text-xs text-error hover:bg-error/10"
+              >
+                <XCircle className="w-4 h-4" /> Cancel
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Production Workflow Progression Bar */}

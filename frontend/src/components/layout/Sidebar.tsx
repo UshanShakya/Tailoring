@@ -9,6 +9,7 @@ import {
   UserCheck,
   Ruler,
   ShoppingBag,
+  FileText,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -75,6 +76,12 @@ export const Sidebar: React.FC = () => {
       to: '/dashboard/orders',
       icon: ShoppingBag,
       show: hasPermission('menu:orders'),
+    },
+    {
+      label: 'Invoices',
+      to: '/dashboard/invoices',
+      icon: FileText,
+      show: hasPermission('menu:invoices'),
     },
   ];
 

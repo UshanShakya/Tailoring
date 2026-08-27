@@ -6,8 +6,8 @@
 
 ## Current Status
 
-**Active Milestone:** Milestone 7 — Invoices & Payments
-**Overall status:** Milestone 6 Complete
+**Active Milestone:** Milestone 8 — Dashboards, Audit Log, Polish
+**Overall status:** Milestone 7 Complete
 
 ## Milestone Overview
 
@@ -19,7 +19,7 @@
 | 4. Garment Types & Measurement Templates | Done | Database models for GarmentType, MeasurementTemplate, TemplateField with English & Nepali (नेपाली) labels, template seed, clone & customize API, and Template Management UI. |
 | 5. Measurements | Done | Prisma Measurement model with version history, tenant-isolated API, dynamic bilingual measurement forms (English & Nepali labels), and Customer Detail measurements integration. |
 | 6. Orders | Done | Database models for Order & OrderItem, OrderStatus workflow, auto-generated order numbers (`ORD-2026-0001`), Order List page with status filter, and Order Detail workflow page. |
-| 7. Invoices & Payments | Not Started | |
+| 7. Invoices & Payments | Done | Database models for Invoice & Payment, auto-generated invoice numbers (`INV-2026-0001`), order-to-invoice generator, partial payment tracking, Invoice List directory, printable invoice billing receipt, and payment history. |
 | 8. Dashboards, Audit Log, Polish | Not Started | |
 
 _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
@@ -53,6 +53,9 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 - [x] Prisma models: `Order`, `OrderItem`, `OrderStatus` enum (2026-08-27)
 - [x] `GET/POST/PATCH /orders` API endpoints with auto-generated order numbers (`ORD-2026-0001`) & status workflow (2026-08-27)
 - [x] Frontend: Order List page with status filter tabs, Order Creation Modal with dynamic garment line items builder, and Order Detail view with status progression bar & workflow buttons (2026-08-27)
+- [x] Prisma models: `Invoice`, `Payment`, `InvoiceStatus` enum, `PaymentMethod` enum (2026-08-27)
+- [x] `GET/POST/PATCH /invoices` & `POST /invoices/generate/:orderId` & `POST /invoices/:id/payments` API endpoints (2026-08-27)
+- [x] Frontend: Invoice List page with status filter tabs, Order Detail "+ Generate Invoice" action button, printable billing receipt view, and Record Payment modal (2026-08-27)
 
 ## In Progress
 
@@ -60,10 +63,10 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 
 ## Left / Up Next
 
-- Prisma models: `Invoice`, `Payment`, `InvoiceStatus` enum (`UNPAID`, `PARTIALLY_PAID`, `PAID`)
-- `POST /invoices/generate-from-order/:orderId` & `GET/PATCH /invoices`
-- `POST /invoices/:id/payments` (record partial or full payments)
-- Frontend: Generate Invoice button on Order Detail, Invoices List page, Record Payment modal, and Printable Invoice View
+- Prisma model: `AuditLog`
+- Audit log middleware / helper (tracks user actions: payment recorded, order status changed, user created)
+- Business Admin overview dashboard (pending orders summary, revenue metrics, outstanding payments widget, recent audit activity)
+- Final end-to-end verification
 
 ## Blockers / Open Questions
 
@@ -81,3 +84,4 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 | 2026-08-27 | Built Milestone 4 (Garment Types & Measurement Templates). Added English & Nepali field labels, seeded 5 standard garment templates, implemented template cloning & customization API, and created Template Management UI. |
 | 2026-08-27 | Built Milestone 5 (Measurements). Implemented Measurement model with versioning, tenant-isolated API endpoints, dynamic bilingual (English & Nepali) measurement recording modal, and Customer Detail measurements history viewer. |
 | 2026-08-27 | Built Milestone 6 (Orders). Implemented Order and OrderItem database models, auto-generated order numbers (`ORD-2026-0001`), order status workflow state machine, Order List page with status filter, and Order Detail workflow page. |
+| 2026-08-27 | Built Milestone 7 (Invoices & Payments). Implemented Invoice and Payment database models, order-to-invoice generator, partial payment tracking with status recalculation, printable billing receipts, and payment history. |

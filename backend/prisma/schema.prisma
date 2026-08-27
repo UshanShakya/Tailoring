@@ -17,6 +17,20 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum InvoiceStatus {
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CARD
+  MOBILE_WALLET
+}
+
 model Business {
   id        String   @id @default(uuid())
   name      String
@@ -32,6 +46,8 @@ model Business {
   measurementTemplates MeasurementTemplate[]
   measurements         Measurement[]
   orders               Order[]
+  invoices             Invoice[]
+  payments             Payment[]
 }
 
 model Role {
@@ -74,6 +90,7 @@ model Customer {
 
   measurements Measurement[]
   orders       Order[]
+  invoices     Invoice[]
 }
 
 model GarmentType {
@@ -147,7 +164,8 @@ model Order {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  items OrderItem[]
+  items   OrderItem[]
+  invoice Invoice?
 }
 
 model OrderItem {
@@ -161,4 +179,38 @@ model OrderItem {
   totalPrice          Decimal     @db.Decimal(10, 2)
   fabricNotes         String?
   specialInstructions String?
+}
+
+model Invoice {
+  id            String        @id @default(uuid())
+  businessId    String
+  business      Business      @relation(fields: [businessId], references: [id])
+  orderId       String        @unique
+  order         Order         @relation(fields: [orderId], references: [id])
+  customerId    String
+  customer      Customer      @relation(fields: [customerId], references: [id])
+  invoiceNumber String        // e.g. "INV-2026-0001"
+  status        InvoiceStatus @default(UNPAID)
+  totalAmount   Decimal       @db.Decimal(10, 2)
+  paidAmount    Decimal       @default(0) @db.Decimal(10, 2)
+  dueAmount     Decimal       @db.Decimal(10, 2)
+  dueDate       DateTime?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  payments Payment[]
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  businessId    String
+  business      Business      @relation(fields: [businessId], references: [id])
+  invoiceId     String
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount        Decimal       @db.Decimal(10, 2)
+  method        PaymentMethod @default(CASH)
+  referenceNote String?
+  recordedBy    String
+  createdAt     DateTime      @default(now())
 }
