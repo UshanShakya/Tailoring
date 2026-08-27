@@ -73,27 +73,24 @@ tenants, and only `SUPER_ADMIN` role can reach them.
 
 ## 3. Roles (fixed enum, not user-configurable for now)
 
-```ts
-enum Role {
-  SUPER_ADMIN,     // platform-wide, businessId = null
-  BUSINESS_ADMIN,  // full control within their business
-  STAFF_FULL,      // customers, measurements, orders, invoices, payments
-  STAFF_BASIC,     // customers, measurements only
-}
+```prisma
+model Role {
+  id          String   @id @default(uuid())
+  businessId  String?  // null = system default role visible globally
+  business    Business? @relation(fields: [businessId], references: [id])
+  name        String   // e.g. "Super Admin", "Business Owner", "Senior Tailor", "Receptionist"
+  description String?
+  permissions Json     // Granted permission keys: ["menu:dashboard", "customer:create", ...]
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
-const PERMISSIONS: Record<Role, string[]> = {
-  SUPER_ADMIN:    ['*'],
-  BUSINESS_ADMIN: ['*business_scoped*'],
-  STAFF_FULL:     ['customer:*', 'measurement:*', 'order:*', 'invoice:*', 'payment:*'],
-  STAFF_BASIC:    [
-    'customer:create', 'customer:edit', 'customer:view',
-    'measurement:create', 'measurement:edit', 'measurement:view',
-  ],
-};
+  users       User[]
+}
 ```
 
-Middleware chain per protected route: `authenticate` → `attachTenant` →
-`authorize(permission)`.
+Permissions are granted as granular key strings (e.g. `menu:dashboard`, `menu:staff`, `menu:roles`, `menu:customers`, `customer:create`, `customer:edit`, `staff:manage`, `role:manage`).
+
+Middleware chain per protected route: `authenticate` → `attachTenant` → `authorize(permissionKey)`.
 
 ## 4. Data Model (Prisma schema, annotated)
 

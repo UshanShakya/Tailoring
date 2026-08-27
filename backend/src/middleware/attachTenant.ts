@@ -8,7 +8,7 @@ export function attachTenant(req: Request, res: Response, next: NextFunction) {
   }
 
   // Super Admin has businessId = null
-  if (req.user.role === 'SUPER_ADMIN') {
+  if (req.user.roleName === 'Super Admin') {
     return next();
   }
 

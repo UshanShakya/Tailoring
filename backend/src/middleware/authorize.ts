@@ -1,26 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { Role } from '@prisma/client';
-
-const PERMISSIONS: Record<Role, string[]> = {
-  SUPER_ADMIN: ['*'],
-  BUSINESS_ADMIN: ['*business_scoped*'],
-  STAFF_FULL: [
-    'customer:*',
-    'measurement:*',
-    'order:*',
-    'invoice:*',
-    'payment:*',
-    'user:view',
-  ],
-  STAFF_BASIC: [
-    'customer:create',
-    'customer:edit',
-    'customer:view',
-    'measurement:create',
-    'measurement:edit',
-    'measurement:view',
-  ],
-};
 
 export function authorize(requiredPermission: string) {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -30,32 +8,34 @@ export function authorize(requiredPermission: string) {
       });
     }
 
-    const userRole = req.user.role;
-    const allowedPermissions = PERMISSIONS[userRole] || [];
+    const userPermissions = req.user.permissions || [];
 
-    // Super Admin wildcard
-    if (allowedPermissions.includes('*')) {
+    // Global wildcard
+    if (userPermissions.includes('*')) {
       return next();
     }
 
-    // Business Admin wildcard for business scoped routes
-    if (allowedPermissions.includes('*business_scoped*') && userRole === 'BUSINESS_ADMIN') {
+    // Business admin wildcard
+    if (userPermissions.includes('*business_scoped*') && req.businessId) {
       return next();
     }
 
-    // Direct match or domain wildcard (e.g. 'customer:*')
+    // Domain wildcard check (e.g. "customer:*")
     const [domain] = requiredPermission.split(':');
     const domainWildcard = `${domain}:*`;
 
     if (
-      allowedPermissions.includes(requiredPermission) ||
-      allowedPermissions.includes(domainWildcard)
+      userPermissions.includes(requiredPermission) ||
+      userPermissions.includes(domainWildcard)
     ) {
       return next();
     }
 
     return res.status(403).json({
-      error: { code: 'FORBIDDEN', message: `Permission '${requiredPermission}' denied for role '${userRole}'` },
+      error: {
+        code: 'FORBIDDEN',
+        message: `Permission '${requiredPermission}' is not granted for your role (${req.user.roleName})`,
+      },
     });
   };
 }

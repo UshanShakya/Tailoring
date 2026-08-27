@@ -19,6 +19,7 @@ interface StaffUser {
 
 export const StaffManagementPage: React.FC = () => {
   const [staffList, setStaffList] = useState<StaffUser[]>([]);
+  const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,14 +28,21 @@ export const StaffManagementPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'STAFF_FULL' | 'STAFF_BASIC'>('STAFF_FULL');
+  const [roleId, setRoleId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const loadStaff = async () => {
+  const loadData = async () => {
     try {
       setIsLoading(true);
-      const data = await fetchWithAuth<StaffUser[]>('/users');
-      setStaffList(data);
+      const [usersData, rolesData] = await Promise.all([
+        fetchWithAuth<StaffUser[]>('/users'),
+        fetchWithAuth<Role[]>('/roles'),
+      ]);
+      setStaffList(usersData);
+      setAvailableRoles(rolesData);
+      if (rolesData.length > 0) {
+        setRoleId(rolesData[0].id);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to load staff list');
     } finally {
@@ -43,23 +51,26 @@ export const StaffManagementPage: React.FC = () => {
   };
 
   useEffect(() => {
-    loadStaff();
+    loadData();
   }, []);
 
   const handleAddStaff = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!roleId) {
+      alert('Please select a role');
+      return;
+    }
     setIsSubmitting(true);
     try {
       await fetchWithAuth('/users', {
         method: 'POST',
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({ name, email, password, roleId }),
       });
       setName('');
       setEmail('');
       setPassword('');
-      setRole('STAFF_FULL');
       setIsAddStaffOpen(false);
-      await loadStaff();
+      await loadData();
     } catch (err: any) {
       alert(err.message || 'Failed to create staff member');
     } finally {
@@ -73,7 +84,7 @@ export const StaffManagementPage: React.FC = () => {
         method: 'PATCH',
         body: JSON.stringify({ isActive: !user.isActive }),
       });
-      await loadStaff();
+      await loadData();
     } catch (err: any) {
       alert(err.message || 'Failed to update staff status');
     }
@@ -87,7 +98,7 @@ export const StaffManagementPage: React.FC = () => {
           <h2 className="text-xl font-semibold text-ink flex items-center gap-2">
             <Users className="w-6 h-6 text-teal" /> Staff Team Management
           </h2>
-          <p className="text-xs text-muted">Manage staff accounts and access privileges for your tailoring business</p>
+          <p className="text-xs text-muted">Manage staff accounts and assign dynamic workspace roles</p>
         </div>
 
         <Button onClick={() => setIsAddStaffOpen(true)} className="gap-2 text-xs">
@@ -120,7 +131,7 @@ export const StaffManagementPage: React.FC = () => {
                 <tr>
                   <th className="px-4 py-3">Staff Name</th>
                   <th className="px-4 py-3">Email Address</th>
-                  <th className="px-4 py-3">Role & Permissions</th>
+                  <th className="px-4 py-3">Assigned Role</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
@@ -131,8 +142,16 @@ export const StaffManagementPage: React.FC = () => {
                     <td className="px-4 py-3 font-semibold">{member.name}</td>
                     <td className="px-4 py-3 text-muted">{member.email}</td>
                     <td className="px-4 py-3">
-                      <Badge variant={member.role === 'BUSINESS_ADMIN' ? 'brass' : member.role === 'STAFF_FULL' ? 'teal' : 'muted'}>
-                        {member.role}
+                      <Badge
+                        variant={
+                          member.role?.name === 'Business Admin'
+                            ? 'brass'
+                            : member.role?.name === 'Super Admin'
+                            ? 'error'
+                            : 'teal'
+                        }
+                      >
+                        {member.role?.name || 'Standard Staff'}
                       </Badge>
                     </td>
                     <td className="px-4 py-3">
@@ -141,7 +160,7 @@ export const StaffManagementPage: React.FC = () => {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {member.role !== 'BUSINESS_ADMIN' && (
+                      {member.role?.name !== 'Business Admin' && member.role?.name !== 'Super Admin' && (
                         <Button
                           variant="outline"
                           className="text-xs px-2.5 py-1"
@@ -196,15 +215,19 @@ export const StaffManagementPage: React.FC = () => {
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
-              Role & Access Level
+              Select Configured Role
             </label>
             <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as 'STAFF_FULL' | 'STAFF_BASIC')}
+              value={roleId}
+              onChange={(e) => setRoleId(e.target.value)}
               className="w-full bg-surface border border-border text-ink rounded-md px-3 py-2 text-sm focus:outline-none focus:border-teal"
+              required
             >
-              <option value="STAFF_FULL">STAFF_FULL (Customers, Measurements, Orders, Payments)</option>
-              <option value="STAFF_BASIC">STAFF_BASIC (Customers & Measurements Only)</option>
+              {availableRoles.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name} {r.isSystem ? '(Built-in)' : '(Custom Tenant)'}
+                </option>
+              ))}
             </select>
           </div>
 

@@ -8,13 +8,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum Role {
-  SUPER_ADMIN
-  BUSINESS_ADMIN
-  STAFF_FULL
-  STAFF_BASIC
-}
-
 model Business {
   id        String   @id @default(uuid())
   name      String
@@ -22,6 +15,20 @@ model Business {
   phone     String?
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+
+  users User[]
+  roles Role[]
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  businessId  String?  // null = system default role (visible to all tenants)
+  business    Business? @relation(fields: [businessId], references: [id])
+  name        String   // e.g. "Super Admin", "Business Owner", "Senior Tailor", "Receptionist"
+  description String?
+  permissions Json     // Array of granted permission strings: ["menu:dashboard", "customer:create", ...]
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
   users User[]
 }
@@ -33,7 +40,8 @@ model User {
   name         String
   email        String    @unique
   passwordHash String
-  role         Role
+  roleId       String
+  role         Role      @relation(fields: [roleId], references: [id])
   isActive     Boolean   @default(true)
   createdAt    DateTime  @default(now())
 }

@@ -21,7 +21,10 @@ const REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 export async function loginUser(input: z.infer<typeof loginSchema>) {
   const user = await prisma.user.findUnique({
     where: { email: input.email },
-    include: { business: true },
+    include: {
+      business: true,
+      role: true,
+    },
   });
 
   if (!user || !user.isActive) {
@@ -33,10 +36,14 @@ export async function loginUser(input: z.infer<typeof loginSchema>) {
     throw { status: 401, code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' };
   }
 
+  const permissions = (user.role.permissions as string[]) || [];
+
   const payload: JwtPayloadUser = {
     userId: user.id,
     email: user.email,
-    role: user.role,
+    roleId: user.role.id,
+    roleName: user.role.name,
+    permissions,
     businessId: user.businessId,
   };
 
@@ -48,7 +55,12 @@ export async function loginUser(input: z.infer<typeof loginSchema>) {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role,
+      role: {
+        id: user.role.id,
+        name: user.role.name,
+        permissions,
+        isSystem: user.role.isSystem,
+      },
       businessId: user.businessId,
       businessName: user.business?.name || null,
     },
@@ -63,17 +75,24 @@ export async function refreshTokens(refreshToken: string) {
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      include: { business: true },
+      include: {
+        business: true,
+        role: true,
+      },
     });
 
     if (!user || !user.isActive) {
       throw { status: 401, code: 'UNAUTHORIZED', message: 'User account is inactive or deleted' };
     }
 
+    const permissions = (user.role.permissions as string[]) || [];
+
     const payload: JwtPayloadUser = {
       userId: user.id,
       email: user.email,
-      role: user.role,
+      roleId: user.role.id,
+      roleName: user.role.name,
+      permissions,
       businessId: user.businessId,
     };
 
@@ -85,7 +104,12 @@ export async function refreshTokens(refreshToken: string) {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role,
+        role: {
+          id: user.role.id,
+          name: user.role.name,
+          permissions,
+          isSystem: user.role.isSystem,
+        },
         businessId: user.businessId,
         businessName: user.business?.name || null,
       },
@@ -105,7 +129,6 @@ export async function getUserProfile(userId: string) {
       id: true,
       name: true,
       email: true,
-      role: true,
       businessId: true,
       isActive: true,
       createdAt: true,
@@ -115,12 +138,28 @@ export async function getUserProfile(userId: string) {
           name: true,
         },
       },
+      role: {
+        select: {
+          id: true,
+          name: true,
+          permissions: true,
+          isSystem: true,
+        },
+      },
     },
   });
 
   if (!user) {
-    throw { status: 444, code: 'NOT_FOUND', message: 'User profile not found' };
+    throw { status: 404, code: 'NOT_FOUND', message: 'User profile not found' };
   }
 
-  return user;
+  return {
+    ...user,
+    role: {
+      id: user.role.id,
+      name: user.role.name,
+      permissions: (user.role.permissions as string[]) || [],
+      isSystem: user.role.isSystem,
+    },
+  };
 }

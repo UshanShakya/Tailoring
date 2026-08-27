@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/ui/Card';
-import { ShieldCheck, Building2, Users, CheckCircle } from 'lucide-react';
+import { ShieldCheck, Building2, Users, CheckCircle, Lock } from 'lucide-react';
 
 export const OverviewPage: React.FC = () => {
   const { user } = useAuth();
@@ -18,10 +18,10 @@ export const OverviewPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-5 space-y-1">
           <div className="flex items-center justify-between text-muted">
-            <span className="text-xs font-semibold uppercase tracking-wider">Role Scope</span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Dynamic Role</span>
             <ShieldCheck className="w-4 h-4 text-teal" />
           </div>
-          <p className="text-base font-semibold text-teal">{user?.role}</p>
+          <p className="text-base font-semibold text-teal">{user?.role?.name}</p>
         </Card>
 
         <Card className="p-5 space-y-1">
@@ -45,25 +45,22 @@ export const OverviewPage: React.FC = () => {
 
       <Card className="p-6 space-y-4">
         <h3 className="text-base font-semibold text-ink flex items-center gap-2">
-          <CheckCircle className="w-5 h-5 text-success" /> Milestone 2 Active Capabilities
+          <CheckCircle className="w-5 h-5 text-success" /> Dynamic Roles & Permissions Active
         </h3>
         <p className="text-xs text-muted leading-relaxed">
-          Business Tenant Management and User/Staff account management endpoints are live with multi-tenant isolation.
+          Your role (<span className="font-semibold text-teal">{user?.role?.name}</span>) is dynamically configured with granular menu access and button permissions.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-          <div className="p-3 bg-canvas border border-border rounded-lg space-y-1">
-            <div className="font-semibold text-ink">Super Admin Role Capabilities</div>
-            <p className="text-muted">
-              Access to <code className="text-teal font-mono">/dashboard/admin/businesses</code> to register new tailoring businesses, assign initial Business Admins, and activate/deactivate tenant access.
-            </p>
-          </div>
-
-          <div className="p-3 bg-canvas border border-border rounded-lg space-y-1">
-            <div className="font-semibold text-ink">Business Admin & Staff Capabilities</div>
-            <p className="text-muted">
-              Access to <code className="text-teal font-mono">/dashboard/staff</code> to add team members (<code className="font-mono">STAFF_FULL</code> and <code className="font-mono">STAFF_BASIC</code>) strictly within their own business.
-            </p>
+        <div className="space-y-2">
+          <span className="text-xs font-semibold text-ink uppercase tracking-wider flex items-center gap-1.5">
+            <Lock className="w-3.5 h-3.5 text-teal" /> Active Granted Permission Keys ({user?.role?.permissions?.length || 0}):
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {user?.role?.permissions?.map((p) => (
+              <span key={p} className="px-2.5 py-1 bg-canvas border border-border rounded text-xs font-mono text-ink">
+                {p}
+              </span>
+            ))}
           </div>
         </div>
       </Card>

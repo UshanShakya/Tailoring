@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './modules/auth/auth.routes';
 import businessesRoutes from './modules/businesses/businesses.routes';
+import rolesRoutes from './modules/roles/roles.routes';
 import { adminUsersRouter, tenantUsersRouter } from './modules/users/users.routes';
 
 dotenv.config();
@@ -18,6 +19,7 @@ app.use('/auth', authRoutes);
 app.use('/admin/businesses', businessesRoutes);
 app.use('/admin/users', adminUsersRouter);
 app.use('/users', tenantUsersRouter);
+app.use('/roles', rolesRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

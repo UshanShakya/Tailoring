@@ -1,6 +1,5 @@
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import { Role } from '@prisma/client';
 import prisma from '../../lib/prisma';
 import { forBusiness } from '../../lib/tenantClient';
 
@@ -15,12 +14,12 @@ export const createStaffSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email(),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  role: z.enum([Role.STAFF_FULL, Role.STAFF_BASIC]),
+  roleId: z.string().min(1, 'Role selection is required'),
 });
 
 export const updateUserSchema = z.object({
   name: z.string().min(2).optional(),
-  role: z.nativeEnum(Role).optional(),
+  roleId: z.string().optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -32,7 +31,6 @@ export async function listAllUsers() {
       id: true,
       name: true,
       email: true,
-      role: true,
       isActive: true,
       createdAt: true,
       businessId: true,
@@ -40,6 +38,13 @@ export async function listAllUsers() {
         select: {
           id: true,
           name: true,
+        },
+      },
+      role: {
+        select: {
+          id: true,
+          name: true,
+          permissions: true,
         },
       },
     },
@@ -58,6 +63,15 @@ export async function createBusinessAdmin(input: z.infer<typeof createBusinessAd
     throw { status: 404, code: 'NOT_FOUND', message: 'Target business not found' };
   }
 
+  // Get or verify Business Admin role
+  const adminRole = await prisma.role.findFirst({
+    where: { name: 'Business Admin' },
+  });
+
+  if (!adminRole) {
+    throw { status: 500, code: 'SYSTEM_ERROR', message: 'System Business Admin role not found' };
+  }
+
   const passwordHash = await bcrypt.hash(input.password, 10);
 
   return prisma.user.create({
@@ -65,16 +79,21 @@ export async function createBusinessAdmin(input: z.infer<typeof createBusinessAd
       name: input.name,
       email: input.email,
       passwordHash,
-      role: Role.BUSINESS_ADMIN,
+      roleId: adminRole.id,
       businessId: input.businessId,
     },
     select: {
       id: true,
       name: true,
       email: true,
-      role: true,
       businessId: true,
       createdAt: true,
+      role: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
     },
   });
 }
@@ -87,9 +106,15 @@ export async function listTenantUsers(businessId: string) {
       id: true,
       name: true,
       email: true,
-      role: true,
       isActive: true,
       createdAt: true,
+      role: {
+        select: {
+          id: true,
+          name: true,
+          permissions: true,
+        },
+      },
     },
   });
 }
@@ -101,13 +126,18 @@ export async function createStaffUser(businessId: string, input: z.infer<typeof 
     throw { status: 400, code: 'EMAIL_EXISTS', message: 'User with this email already exists' };
   }
 
+  const role = await prisma.role.findUnique({ where: { id: input.roleId } });
+  if (!role) {
+    throw { status: 404, code: 'NOT_FOUND', message: 'Selected role not found' };
+  }
+
   const passwordHash = await bcrypt.hash(input.password, 10);
 
   return forBusiness(businessId).user.create({
     name: input.name,
     email: input.email,
     passwordHash,
-    role: input.role,
+    roleId: input.roleId,
   });
 }
 
@@ -118,7 +148,7 @@ export async function updateUser(id: string, businessId: string | null, input: z
     throw { status: 404, code: 'NOT_FOUND', message: 'User not found' };
   }
 
-  // Tenant Isolation Check: non-Super-Admin users can only edit users within their own business
+  // Tenant Isolation Check
   if (businessId && user.businessId !== businessId) {
     throw { status: 403, code: 'FORBIDDEN', message: 'Cannot edit user from another business tenant' };
   }
@@ -130,8 +160,13 @@ export async function updateUser(id: string, businessId: string | null, input: z
       id: true,
       name: true,
       email: true,
-      role: true,
       isActive: true,
+      role: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
     },
   });
 }

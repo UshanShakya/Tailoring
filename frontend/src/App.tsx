@@ -8,6 +8,7 @@ import { DashboardShellPage } from './pages/DashboardShellPage';
 import { OverviewPage } from './pages/OverviewPage';
 import { SuperAdminDashboard } from './pages/admin/SuperAdminDashboard';
 import { StaffManagementPage } from './pages/staff/StaffManagementPage';
+import { RoleManagementPage } from './pages/roles/RoleManagementPage';
 
 const queryClient = new QueryClient();
 
@@ -22,13 +23,17 @@ export const App: React.FC = () => {
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<DashboardShellPage />}>
                 <Route index element={<OverviewPage />} />
-                
-                <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
+
+                <Route element={<ProtectedRoute allowedRoleNames={['Super Admin']} />}>
                   <Route path="admin/businesses" element={<SuperAdminDashboard />} />
                 </Route>
 
-                <Route element={<ProtectedRoute allowedRoles={['BUSINESS_ADMIN', 'STAFF_FULL']} />}>
+                <Route element={<ProtectedRoute requiredPermission="menu:staff" />}>
                   <Route path="staff" element={<StaffManagementPage />} />
+                </Route>
+
+                <Route element={<ProtectedRoute requiredPermission="menu:roles" />}>
+                  <Route path="roles" element={<RoleManagementPage />} />
                 </Route>
               </Route>
             </Route>

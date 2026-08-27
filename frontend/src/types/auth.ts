@@ -1,4 +1,10 @@
-export type Role = 'SUPER_ADMIN' | 'BUSINESS_ADMIN' | 'STAFF_FULL' | 'STAFF_BASIC';
+export interface Role {
+  id: string;
+  name: string;
+  permissions: string[];
+  description?: string;
+  isSystem?: boolean;
+}
 
 export interface UserProfile {
   id: string;
