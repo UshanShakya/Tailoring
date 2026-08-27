@@ -107,7 +107,7 @@ export const CustomerListPage: React.FC = () => {
         <Search className="w-4 h-4 text-muted absolute left-3 top-2.5" />
         <input
           type="text"
-          placeholder="Search by customer name or phone number..."
+          placeholder="Search by Name, Phone, or Address (3-field search)..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full bg-surface border border-border text-ink rounded-md pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-teal"

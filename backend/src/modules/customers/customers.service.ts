@@ -15,7 +15,7 @@ export const updateCustomerSchema = z.object({
   notes: z.string().optional(),
 });
 
-// List customers for caller's business with search filter
+// List customers for caller's business with 3-field search filter (Name, Phone, Address)
 export async function listCustomers(businessId: string, search?: string) {
   const where: any = {};
   if (search && search.trim() !== '') {
@@ -23,6 +23,7 @@ export async function listCustomers(businessId: string, search?: string) {
     where.OR = [
       { name: { contains: query, mode: 'insensitive' } },
       { phone: { contains: query, mode: 'insensitive' } },
+      { address: { contains: query, mode: 'insensitive' } },
     ];
   }
 

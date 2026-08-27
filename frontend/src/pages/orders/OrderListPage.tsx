@@ -6,6 +6,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { Badge } from '../../components/ui/Badge';
+import { CustomerSearchSelect } from '../../components/ui/CustomerSearchSelect';
 import {
   ShoppingBag,
   Plus,
@@ -337,23 +338,12 @@ export const OrderListPage: React.FC = () => {
       {/* Create Order Modal */}
       <Modal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} title="Create New Tailoring Order">
         <form onSubmit={handleCreateOrder} className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
-              Select Client / Customer
-            </label>
-            <select
-              value={customerId}
-              onChange={(e) => setCustomerId(e.target.value)}
-              className="w-full bg-surface border border-border text-ink rounded-md p-2.5 text-xs focus:outline-none focus:border-teal"
-              required
-            >
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} {c.phone ? `(${c.phone})` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
+          <CustomerSearchSelect
+            customers={customers}
+            value={customerId}
+            onChange={(val) => setCustomerId(val)}
+            required
+          />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
