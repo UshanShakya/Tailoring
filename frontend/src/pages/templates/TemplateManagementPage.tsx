@@ -23,6 +23,7 @@ interface GarmentType {
   id: string;
   name: string;
   nameNp?: string;
+  defaultPrice?: number | null;
   isSystemDefault: boolean;
 }
 

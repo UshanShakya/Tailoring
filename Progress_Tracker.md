@@ -6,8 +6,8 @@
 
 ## Current Status
 
-**Active Milestone:** — (All Milestones Complete)
-**Overall status:** Project Complete (Milestones 1-9 Complete)
+**Active Milestone:** — (All Milestones 1–10 Complete)
+**Overall status:** Project Complete (Milestones 1-10 Complete)
 
 ## Milestone Overview
 
@@ -22,6 +22,7 @@
 | 7. Invoices & Payments | Done | Database models for Invoice & Payment, auto-generated invoice numbers (`INV-2026-0001`), order-to-invoice generator, partial payment tracking, Invoice List directory, printable invoice billing receipt, and payment history. |
 | 8. Dashboards, Audit Log, Polish | Done | `AuditLog` database model, automated audit logger utility, `/dashboard/stats` backend API, and live executive dashboard on `OverviewPage.tsx`. |
 | 9. Global UX & Application Quality of Life | Done | Nepalese Rupee formatting (`Rs. 1,750.00`), Light/Dark theme system with TopBar toggle, tenant- & permission-scoped Global Search API & combobox, reusable BackButton & PageHeader, local Select2 combobox with async API search, and invoice print styles. |
+| 10. Company Setup, Pricing & Nepal Billing | Done | Company setup profile, PAN/VAT # registration, Cloudinary logo upload, optional garment default pricing, permanent invoice price snapshotting, Nepalese A4 billing print receipt, and automated test suite. |
 
 _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 
@@ -63,6 +64,7 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 - [x] Frontend: Upgraded Overview Dashboard (`OverviewPage.tsx`) with active metrics, revenue totals, outstanding balance due, quick action shortcuts, and live Audit Trail Activity feed (2026-08-27)
 - [x] Milestone 9: Currency standardization to Nepalese Rupees (`Rs. 1,750.00`), Light/Dark theme system with TopBar toggle, tenant- & permission-scoped Global Search API & popup combobox, reusable BackButton & PageHeader, local Select2 combobox with async API search, and invoice print styles (2026-08-27)
 - [x] Role Groups & User Group Assignment: `RoleGroup` & `RoleGroupMapping` database models, permission aggregation engine, `/role-groups` API module, Role Group management page (`RoleGroupManagementPage.tsx`), and staff user group assignment (2026-08-27)
+- [x] Milestone 10: Company Setup, Pricing & Nepal Billing — Company settings API, Cloudinary logo upload, optional garment default pricing, permanent invoice price snapshotting, Nepalese A4 billing print receipt, and 5 automated billing unit tests (2026-08-27)
 
 ## In Progress
 

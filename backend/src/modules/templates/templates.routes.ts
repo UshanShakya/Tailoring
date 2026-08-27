@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   getGarmentTypesHandler,
   createGarmentTypeHandler,
+  updateGarmentTypeHandler,
   getTemplatesHandler,
   getTemplateByIdHandler,
   cloneTemplateHandler,
@@ -19,6 +20,7 @@ router.use(authenticate, attachTenant);
 // Garment Types
 router.get('/garment-types', authorize('template:view'), getGarmentTypesHandler);
 router.post('/garment-types', authorize('template:manage'), createGarmentTypeHandler);
+router.patch('/garment-types/:id', authorize('template:manage'), updateGarmentTypeHandler);
 
 // Measurement Templates
 router.get('/measurement-templates', authorize('template:view'), getTemplatesHandler);

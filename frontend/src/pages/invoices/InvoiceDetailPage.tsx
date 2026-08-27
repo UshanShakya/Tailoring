@@ -31,6 +31,15 @@ interface InvoiceDetailRecord {
   id: string;
   invoiceNumber: string;
   status: 'UNPAID' | 'PARTIALLY_PAID' | 'PAID' | 'CANCELLED';
+  companyName?: string;
+  companyPan?: string;
+  companyAddress?: string;
+  companyPhone?: string;
+  companyLogoUrl?: string;
+  isVatRegistered?: boolean;
+  taxRate?: number;
+  subtotal?: number;
+  taxAmount?: number;
   totalAmount: number;
   paidAmount: number;
   dueAmount: number;
@@ -197,20 +206,38 @@ export const InvoiceDetailPage: React.FC = () => {
       {/* Printable Invoice Container */}
       <Card className="p-8 space-y-6 bg-surface print:shadow-none print:border-none">
         {/* Invoice Branding Header */}
-        <div className="flex flex-col sm:flex-row justify-between gap-4 border-b border-border pb-6">
-          <div>
-            <h1 className="text-xl font-bold text-ink tracking-tight flex items-center gap-2">
-              <Scissors className="w-5 h-5 text-teal" /> {user?.businessName || 'Tailoring Management Platform'}
-            </h1>
-            <p className="text-xs text-muted mt-1">Bespoke Tailoring & Garment Billing Receipt</p>
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 border-b border-border pb-6">
+          <div className="flex items-start gap-4">
+            {invoice.companyLogoUrl ? (
+              <img src={invoice.companyLogoUrl} alt="Logo" className="h-12 object-contain rounded p-1 bg-surface border border-border" />
+            ) : (
+              <div className="w-10 h-10 rounded bg-teal/10 text-teal flex items-center justify-center font-bold">
+                <Scissors className="w-5 h-5" />
+              </div>
+            )}
+            <div>
+              <h1 className="text-xl font-bold text-ink tracking-tight">
+                {invoice.companyName || user?.businessName || 'Tailoring Management Platform'}
+              </h1>
+              {invoice.companyAddress && <p className="text-xs text-muted mt-0.5">{invoice.companyAddress}</p>}
+              {invoice.companyPhone && <p className="text-xs text-muted">Phone: {invoice.companyPhone}</p>}
+              {invoice.companyPan && (
+                <p className="text-xs text-teal font-mono font-semibold mt-1">
+                  PAN/VAT Reg No: {invoice.companyPan}
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="sm:text-right text-xs">
             <span className="font-mono text-sm font-bold text-teal block">{invoice.invoiceNumber}</span>
             <span className="text-muted block">Date: {new Date(invoice.createdAt).toLocaleDateString()}</span>
             {invoice.dueDate && (
-              <span className="text-muted block">Due: {new Date(invoice.dueDate).toLocaleDateString()}</span>
+              <span className="text-muted block">Due Date: {new Date(invoice.dueDate).toLocaleDateString()}</span>
             )}
+            <Badge variant={invoice.isVatRegistered ? 'teal' : 'muted'} className="mt-1">
+              {invoice.isVatRegistered ? `VAT Tax Invoice (${invoice.taxRate}%)` : 'Non-VAT Bill'}
+            </Badge>
           </div>
         </div>
 
@@ -267,10 +294,23 @@ export const InvoiceDetailPage: React.FC = () => {
           <div className="w-full max-w-xs space-y-2 text-xs border-t border-border pt-4">
             <div className="flex justify-between text-muted">
               <span>Subtotal Amount:</span>
-              <span className="font-mono text-ink">{formatCurrency(invoice.totalAmount)}</span>
+              <span className="font-mono text-ink">{formatCurrency(invoice.subtotal ?? invoice.totalAmount)}</span>
             </div>
+
+            {invoice.isVatRegistered && Number(invoice.taxAmount) > 0 && (
+              <div className="flex justify-between text-muted">
+                <span>VAT ({invoice.taxRate}%):</span>
+                <span className="font-mono text-teal">+{formatCurrency(invoice.taxAmount)}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between text-ink font-bold border-t border-border pt-2">
+              <span>Total Invoice Amount:</span>
+              <span className="font-mono text-teal text-sm">{formatCurrency(invoice.totalAmount)}</span>
+            </div>
+
             <div className="flex justify-between text-muted">
-              <span>Paid Deposits / Payments:</span>
+              <span>Paid Payments / Deposits:</span>
               <span className="font-mono text-success font-semibold">-{formatCurrency(invoice.paidAmount)}</span>
             </div>
             <div className="flex justify-between text-sm font-bold border-t border-border pt-2 text-ink">
@@ -281,6 +321,13 @@ export const InvoiceDetailPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {invoice.notes && (
+          <div className="pt-4 border-t border-border text-xs text-muted italic">
+            <span className="font-semibold text-ink not-italic block">Invoice Terms & Notes:</span>
+            "{invoice.notes}"
+          </div>
+        )}
       </Card>
 
       {/* Payment History Section */}

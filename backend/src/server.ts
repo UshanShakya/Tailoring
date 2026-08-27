@@ -12,6 +12,7 @@ import invoicesRoutes from './modules/invoices/invoices.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
 import searchRoutes from './modules/search/search.routes';
 import roleGroupsRoutes from './modules/role-groups/role-groups.routes';
+import companyRoutes from './modules/settings/company.routes';
 import { adminUsersRouter, tenantUsersRouter } from './modules/users/users.routes';
 
 dotenv.config();
@@ -20,7 +21,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // API Routes
 app.use('/auth', authRoutes);
@@ -29,6 +30,7 @@ app.use('/admin/users', adminUsersRouter);
 app.use('/users', tenantUsersRouter);
 app.use('/roles', rolesRoutes);
 app.use('/role-groups', roleGroupsRoutes);
+app.use('/settings/company', companyRoutes);
 app.use('/customers', customersRoutes);
 app.use('/orders', ordersRoutes);
 app.use('/invoices', invoicesRoutes);

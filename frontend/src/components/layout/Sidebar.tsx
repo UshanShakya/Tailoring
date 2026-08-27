@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
+  Scissors,
   LayoutDashboard,
   Building2,
   Users,
@@ -10,10 +11,9 @@ import {
   Ruler,
   ShoppingBag,
   FileText,
-  LogOut,
   ChevronLeft,
   ChevronRight,
-  Scissors,
+  LogOut,
 } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 
@@ -88,6 +88,12 @@ export const Sidebar: React.FC = () => {
       to: '/dashboard/invoices',
       icon: FileText,
       show: hasPermission('menu:invoices'),
+    },
+    {
+      label: 'Company Settings',
+      to: '/dashboard/settings',
+      icon: Building2,
+      show: hasPermission('menu:settings') || user?.role?.name === 'Business Admin' || user?.role?.name === 'Super Admin',
     },
   ];
 

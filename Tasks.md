@@ -188,3 +188,112 @@ complies with the design tokens, and the app is deployed to a live URL.
       - [ ] Use the same formatting in orders, invoices, payments, dashboards and reports
 
 Milestone done when: the application has a consistent global navigation experience with role-aware search, back navigation, light/dark themes, a reusable locally installed Select2 implementation, API-backed searching for large datasets, invoice-only printing, and consistent NPR monetary formatting.
+
+
+### Milestone 10 — Company Setup, Pricing & Nepal Billing
+
+- [x] Create Prisma model for global/business company setup
+      - [x] Company/business name
+      - [x] Address
+      - [x] PAN number
+      - [x] Contact number
+      - [x] Email
+      - [x] Logo/image
+      - [x] Other information required for invoices
+- [x] Implement company setup API
+      - [x] GET /settings/company
+      - [x] PATCH /settings/company
+      - [x] Restrict modification to authorized Business Admin users
+      - [x] Ensure each business can only manage its own company information
+- [x] Implement company setup frontend
+      - [x] Company name
+      - [x] Address
+      - [x] PAN
+      - [x] Contact information
+      - [x] Logo upload
+      - [x] Preview
+      - [x] Replace/remove logo
+- [x] Integrate Cloudinary for company images
+      - [x] Use Cloudinary free tier
+      - [x] Compress/resize images before upload where appropriate
+      - [x] Store Cloudinary URL/public identifier rather than image binary in PostgreSQL
+      - [x] Validate supported image formats and reasonable file sizes
+      - [x] Handle replacing/deleting previous company logo
+- [x] Review garment/product pricing model
+- [x] Make garment/product type pricing optional
+      - [x] Default price may be null
+      - [x] A garment type/product can exist without a predefined price
+- [x] Update order creation
+      - [x] Unit price must not be required
+      - [x] When creating an order, automatically use the configured garment/product price when one exists
+      - [x] Allow the resulting unit price to remain null when no configured price exists
+      - [x] Allow authorized users to manually provide/override the price when appropriate
+      - [x] Do not prevent order creation merely because a price has not yet been determined
+- [x] Define invoice pricing behavior
+      - [x] Clearly distinguish between configured/default price and the final order/invoice price
+      - [x] Once an invoice is issued, preserve the price used for that invoice
+      - [x] Changes to future garment/product pricing must not alter existing invoices
+- [x] Implement proper invoice generation
+      - [x] Generate invoice from an order
+      - [x] Include company information
+      - [x] Include company logo
+      - [x] Include PAN
+      - [x] Include customer information
+      - [x] Include invoice number
+      - [x] Include invoice date
+      - [x] Include order/reference information
+      - [x] Include garment/product descriptions
+      - [x] Include quantities
+      - [x] Include unit prices
+      - [x] Include line totals
+      - [x] Include subtotal
+      - [x] Include applicable taxes/charges where configured
+      - [x] Include total amount
+      - [x] Include amount paid
+      - [x] Include amount due
+      - [x] Display amounts in NPR
+- [x] Implement invoice numbering
+      - [x] Define a reliable invoice-number generation strategy
+      - [x] Ensure invoice numbers cannot accidentally be duplicated
+      - [x] Ensure concurrent invoice creation cannot generate the same invoice number
+      - [x] Preserve invoice numbers permanently once issued
+- [x] Implement invoice lifecycle rules
+      - [x] Draft invoice
+      - [x] Issued/finalized invoice
+      - [x] Paid/partially paid/unpaid state
+      - [x] Prevent inappropriate modification of finalized billing information
+      - [x] Keep historical invoice data stable
+- [x] Review payment calculations
+      - [x] Partial payments
+      - [x] Total paid
+      - [x] Remaining balance
+      - [x] Overpayment prevention
+      - [x] Invoice payment status
+      - [x] NPR formatting
+- [x] Update invoice print/PDF layout for actual customer billing
+      - [x] Professional invoice layout
+      - [x] Company branding
+      - [x] Company PAN
+      - [x] Customer details
+      - [x] Invoice number/date
+      - [x] Itemized charges
+      - [x] Totals
+      - [x] Payment status
+      - [x] Suitable A4/standard printing layout
+- [x] Review Nepal billing requirements before marking this milestone complete
+      - [x] Verify required invoice/business fields
+      - [x] Verify invoice numbering requirements
+      - [x] Verify applicable tax/VAT fields based on the business's actual registration/status
+      - [x] Verify required customer information
+      - [x] Verify invoice retention/history requirements
+      - [x] Avoid hard-coding assumptions where requirements depend on the business's tax status
+- [x] Add tests for billing calculations and invoice generation
+      - [x] Price available
+      - [x] Price unavailable/null
+      - [x] Partial payment
+      - [x] Fully paid invoice
+      - [x] Multiple payments
+      - [x] Concurrent invoice creation
+      - [x] Invoice remains unchanged after product price changes
+
+**Milestone done when:** a Business Admin can configure their company's billing information and logo, orders can be created even when a price has not yet been determined, configured prices are automatically used when available, invoices preserve their final billing values, payments correctly update outstanding balances, and the resulting invoice contains the information required for the business's applicable Nepalese billing/tax requirements.

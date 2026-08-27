@@ -32,12 +32,19 @@ enum PaymentMethod {
 }
 
 model Business {
-  id        String   @id @default(uuid())
-  name      String
-  address   String?
-  phone     String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id              String   @id @default(uuid())
+  name            String
+  address         String?
+  phone           String?
+  email           String?
+  panNumber       String?  // Nepalese PAN / VAT Registration Number
+  isVatRegistered Boolean  @default(false)
+  taxRate         Decimal? @default(0) @db.Decimal(5, 2) // e.g. 13.00 for 13% VAT
+  logoUrl         String?  // Cloudinary image URL
+  logoPublicId    String?
+  invoiceNote     String?  // Footer note on billing receipts
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
 
   users                User[]
   roles                Role[]
@@ -126,6 +133,7 @@ model GarmentType {
   business        Business? @relation(fields: [businessId], references: [id])
   name            String   // e.g. "Shirt", "Trousers", "Suit", "Kurta"
   nameNp          String?  // e.g. "सर्ट", "प्यान्ट", "सूट", "कुर्ता"
+  defaultPrice    Decimal? @db.Decimal(10, 2) // Optional default unit price
   isSystemDefault Boolean  @default(false)
   createdAt       DateTime @default(now())
 
@@ -202,29 +210,40 @@ model OrderItem {
   garmentTypeId       String
   garmentType         GarmentType @relation(fields: [garmentTypeId], references: [id])
   quantity            Int         @default(1)
-  unitPrice           Decimal     @db.Decimal(10, 2)
-  totalPrice          Decimal     @db.Decimal(10, 2)
+  unitPrice           Decimal?    @db.Decimal(10, 2) // Optional unit price
+  totalPrice          Decimal     @default(0) @db.Decimal(10, 2)
   fabricNotes         String?
   specialInstructions String?
 }
 
 model Invoice {
-  id            String        @id @default(uuid())
-  businessId    String
-  business      Business      @relation(fields: [businessId], references: [id])
-  orderId       String        @unique
-  order         Order         @relation(fields: [orderId], references: [id])
-  customerId    String
-  customer      Customer      @relation(fields: [customerId], references: [id])
-  invoiceNumber String        // e.g. "INV-2026-0001"
-  status        InvoiceStatus @default(UNPAID)
-  totalAmount   Decimal       @db.Decimal(10, 2)
-  paidAmount    Decimal       @default(0) @db.Decimal(10, 2)
-  dueAmount     Decimal       @db.Decimal(10, 2)
-  dueDate       DateTime?
-  notes         String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id              String        @id @default(uuid())
+  businessId      String
+  business        Business      @relation(fields: [businessId], references: [id])
+  orderId         String        @unique
+  order           Order         @relation(fields: [orderId], references: [id])
+  customerId      String
+  customer        Customer      @relation(fields: [customerId], references: [id])
+  invoiceNumber   String        // e.g. "INV-2026-0001"
+  status          InvoiceStatus @default(UNPAID)
+  
+  // Permanent Company & Billing Snapshot
+  companyName     String?
+  companyPan      String?
+  companyAddress  String?
+  companyPhone    String?
+  companyLogoUrl  String?
+  isVatRegistered Boolean       @default(false)
+  taxRate         Decimal       @default(0) @db.Decimal(5, 2)
+  subtotal        Decimal       @default(0) @db.Decimal(10, 2)
+  taxAmount       Decimal       @default(0) @db.Decimal(10, 2)
+  totalAmount     Decimal       @db.Decimal(10, 2)
+  paidAmount      Decimal       @default(0) @db.Decimal(10, 2)
+  dueAmount       Decimal       @db.Decimal(10, 2)
+  dueDate         DateTime?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   payments Payment[]
 }

@@ -7,7 +7,7 @@ import { logAuditEvent } from '../../lib/auditLogger';
 export const orderItemSchema = z.object({
   garmentTypeId: z.string().min(1, 'Garment type is required'),
   quantity: z.number().int().min(1).default(1),
-  unitPrice: z.number().min(0, 'Unit price must be non-negative'),
+  unitPrice: z.number().min(0, 'Unit price must be non-negative').optional().nullable(),
   fabricNotes: z.string().optional(),
   specialInstructions: z.string().optional(),
 });
@@ -96,15 +96,33 @@ export async function createOrder(
     throw { status: 404, code: 'NOT_FOUND', message: 'Customer not found' };
   }
 
+  // Pre-fetch GarmentTypes for auto-filling default prices
+  const garmentTypeIds = input.items.map((it) => it.garmentTypeId);
+  const garmentTypes = await prisma.garmentType.findMany({
+    where: { id: { in: garmentTypeIds } },
+  });
+  const garmentTypeMap = new Map(garmentTypes.map((g) => [g.id, g]));
+
   // Calculate order total
   let totalAmount = 0;
   const processedItems = input.items.map((item) => {
-    const lineTotal = item.quantity * item.unitPrice;
+    const gType = garmentTypeMap.get(item.garmentTypeId);
+    
+    // Auto-fill price from garmentType.defaultPrice if unitPrice is missing
+    let finalUnitPrice: number | null = null;
+    if (item.unitPrice !== undefined && item.unitPrice !== null) {
+      finalUnitPrice = item.unitPrice;
+    } else if (gType && gType.defaultPrice !== null && gType.defaultPrice !== undefined) {
+      finalUnitPrice = Number(gType.defaultPrice);
+    }
+
+    const lineTotal = finalUnitPrice !== null ? item.quantity * finalUnitPrice : 0;
     totalAmount += lineTotal;
+
     return {
       garmentTypeId: item.garmentTypeId,
       quantity: item.quantity,
-      unitPrice: item.unitPrice,
+      unitPrice: finalUnitPrice,
       totalPrice: lineTotal,
       fabricNotes: item.fabricNotes,
       specialInstructions: item.specialInstructions,

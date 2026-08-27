@@ -83,7 +83,7 @@ export async function getInvoiceById(businessId: string, invoiceId: string) {
   return invoice;
 }
 
-// Generate Invoice from Order
+// Generate Invoice from Order with Company Snapshot & VAT Tax Calculation
 export async function generateInvoiceFromOrder(businessId: string, orderId: string, actorEmail: string = 'system') {
   const order = await getOrderById(businessId, orderId);
 
@@ -96,8 +96,17 @@ export async function generateInvoiceFromOrder(businessId: string, orderId: stri
     return existing;
   }
 
+  // Fetch Business Company Profile for Snapshot
+  const business = await prisma.business.findUnique({
+    where: { id: businessId },
+  });
+
   const invoiceNumber = await generateInvoiceNumber(businessId);
-  const total = Number(order.totalAmount);
+  const subtotal = Number(order.totalAmount);
+  const isVat = business?.isVatRegistered || false;
+  const taxRate = isVat ? Number(business?.taxRate || 13) : 0;
+  const taxAmount = isVat ? Math.round((subtotal * (taxRate / 100)) * 100) / 100 : 0;
+  const totalAmount = Math.round((subtotal + taxAmount) * 100) / 100;
 
   const invoice = await prisma.invoice.create({
     data: {
@@ -106,11 +115,22 @@ export async function generateInvoiceFromOrder(businessId: string, orderId: stri
       customerId: order.customerId,
       invoiceNumber,
       status: InvoiceStatus.UNPAID,
-      totalAmount: total,
+      
+      // Permanent Company Snapshot
+      companyName: business?.name || 'Bespoke Tailoring',
+      companyPan: business?.panNumber || null,
+      companyAddress: business?.address || null,
+      companyPhone: business?.phone || null,
+      companyLogoUrl: business?.logoUrl || null,
+      isVatRegistered: isVat,
+      taxRate,
+      subtotal,
+      taxAmount,
+      totalAmount,
       paidAmount: 0,
-      dueAmount: total,
+      dueAmount: totalAmount,
       dueDate: order.dueDate,
-      notes: order.notes,
+      notes: order.notes || business?.invoiceNote || null,
     },
     include: {
       customer: true,
@@ -135,7 +155,9 @@ export async function generateInvoiceFromOrder(businessId: string, orderId: stri
     details: {
       invoiceNumber: invoice.invoiceNumber,
       orderNumber: order.orderNumber,
-      totalAmount: total,
+      subtotal,
+      taxAmount,
+      totalAmount,
     },
   });
 
@@ -156,7 +178,7 @@ export async function recordPayment(
     throw {
       status: 400,
       code: 'INVALID_PAYMENT',
-      message: `Payment amount ($${input.amount}) exceeds remaining due balance ($${currentDue})`,
+      message: `Payment amount (Rs. ${input.amount}) exceeds remaining due balance (Rs. ${currentDue})`,
     };
   }
 

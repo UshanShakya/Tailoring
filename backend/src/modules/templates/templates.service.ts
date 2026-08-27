@@ -4,6 +4,13 @@ import prisma from '../../lib/prisma';
 export const createGarmentTypeSchema = z.object({
   name: z.string().min(2, 'Garment type name is required'),
   nameNp: z.string().optional(),
+  defaultPrice: z.number().min(0).optional().nullable(),
+});
+
+export const updateGarmentTypeSchema = z.object({
+  name: z.string().min(2).optional(),
+  nameNp: z.string().optional(),
+  defaultPrice: z.number().min(0).optional().nullable(),
 });
 
 export const fieldSchema = z.object({
@@ -57,8 +64,34 @@ export async function createGarmentType(businessId: string | null, input: z.infe
     data: {
       name: input.name,
       nameNp: input.nameNp,
+      defaultPrice: input.defaultPrice !== undefined ? input.defaultPrice : null,
       businessId,
       isSystemDefault: false,
+    },
+  });
+}
+
+// Update Garment Type Default Price
+export async function updateGarmentType(
+  businessId: string | null,
+  id: string,
+  input: z.infer<typeof updateGarmentTypeSchema>
+) {
+  const gType = await prisma.garmentType.findUnique({ where: { id } });
+  if (!gType) {
+    throw { status: 404, code: 'NOT_FOUND', message: 'Garment type not found' };
+  }
+
+  if (gType.businessId && businessId && gType.businessId !== businessId) {
+    throw { status: 403, code: 'FORBIDDEN', message: 'Cannot edit garment type from another business' };
+  }
+
+  return prisma.garmentType.update({
+    where: { id },
+    data: {
+      ...(input.name ? { name: input.name } : {}),
+      ...(input.nameNp !== undefined ? { nameNp: input.nameNp } : {}),
+      ...(input.defaultPrice !== undefined ? { defaultPrice: input.defaultPrice } : {}),
     },
   });
 }

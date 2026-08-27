@@ -17,6 +17,7 @@ import { OrderListPage } from './pages/orders/OrderListPage';
 import { OrderDetailPage } from './pages/orders/OrderDetailPage';
 import { InvoiceListPage } from './pages/invoices/InvoiceListPage';
 import { InvoiceDetailPage } from './pages/invoices/InvoiceDetailPage';
+import { CompanySettingsPage } from './pages/settings/CompanySettingsPage';
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,8 @@ export const App: React.FC = () => {
                   <Route path="roles" element={<RoleManagementPage />} />
                   <Route path="role-groups" element={<RoleGroupManagementPage />} />
                 </Route>
+
+                <Route path="settings" element={<CompanySettingsPage />} />
 
                 <Route element={<ProtectedRoute requiredPermission="menu:customers" />}>
                   <Route path="customers" element={<CustomerListPage />} />

@@ -1,11 +1,13 @@
 import { Request, Response } from 'express';
 import {
   createGarmentTypeSchema,
+  updateGarmentTypeSchema,
   createTemplateSchema,
   cloneTemplateSchema,
   updateTemplateSchema,
   listGarmentTypes,
   createGarmentType,
+  updateGarmentType,
   listTemplates,
   getTemplateById,
   cloneTemplate,
@@ -41,6 +43,26 @@ export async function createGarmentTypeHandler(req: Request, res: Response) {
     const status = err.status || 500;
     return res.status(status).json({
       error: { code: err.code || 'INTERNAL_ERROR', message: err.message || 'Failed to create garment type' },
+    });
+  }
+}
+
+export async function updateGarmentTypeHandler(req: Request, res: Response) {
+  try {
+    const businessId = req.user?.roleName === 'Super Admin' ? null : req.businessId || null;
+    const { id } = req.params;
+    const validated = updateGarmentTypeSchema.parse(req.body);
+    const updated = await updateGarmentType(businessId, id, validated);
+    return res.json(updated);
+  } catch (err: any) {
+    if (err.name === 'ZodError') {
+      return res.status(400).json({
+        error: { code: 'VALIDATION_ERROR', message: err.errors[0]?.message || 'Invalid input' },
+      });
+    }
+    const status = err.status || 500;
+    return res.status(status).json({
+      error: { code: err.code || 'INTERNAL_ERROR', message: err.message || 'Failed to update garment type' },
     });
   }
 }
