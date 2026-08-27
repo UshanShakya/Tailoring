@@ -6,8 +6,8 @@
 
 ## Current Status
 
-**Active Milestone:** Milestone 5 — Measurements
-**Overall status:** Milestone 4 Complete
+**Active Milestone:** Milestone 6 — Orders
+**Overall status:** Milestone 5 Complete
 
 ## Milestone Overview
 
@@ -17,7 +17,7 @@
 | 2. Business & User Management | Done | Super Admin business management dashboard, tenant user management, staff team management UI, modal & badge UI components. |
 | 3. Customer Management | Done | Customer database model, tenant-scoped API routes with search, Customer List page, Customer Detail profile shell, add/edit modals. |
 | 4. Garment Types & Measurement Templates | Done | Database models for GarmentType, MeasurementTemplate, TemplateField with English & Nepali (नेपाली) labels, template seed, clone & customize API, and Template Management UI. |
-| 5. Measurements | Not Started | |
+| 5. Measurements | Done | Prisma Measurement model with version history, tenant-isolated API, dynamic bilingual measurement forms (English & Nepali labels), and Customer Detail measurements integration. |
 | 6. Orders | Not Started | |
 | 7. Invoices & Payments | Not Started | |
 | 8. Dashboards, Audit Log, Polish | Not Started | |
@@ -47,6 +47,9 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 - [x] Seed script: standard system-default garment types & templates (Shirt, Trousers, Suit, Kurta, Blazer) with English & Nepali labels (2026-08-27)
 - [x] `GET /garment-types` & `GET/POST/PATCH /measurement-templates` & `POST /measurement-templates/clone` (2026-08-27)
 - [x] Frontend: Template Management UI with English/Nepali label editor, template viewer, and clone & customize flow (2026-08-27)
+- [x] Prisma model: `Measurement` with versioning (2026-08-27)
+- [x] `GET/POST /customers/:id/measurements` API endpoints with version auto-increment (2026-08-27)
+- [x] Frontend: Customer Detail Measurements History tab, "Take New Measurement" modal with bilingual English/Nepali inputs, and measurement session viewer modal (2026-08-27)
 
 ## In Progress
 
@@ -54,10 +57,9 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 
 ## Left / Up Next
 
-- Prisma model: `Measurement` (references a concrete `templateId` with JSON values and version history)
-- `POST /customers/:id/measurements` (loads template, validates values against template fields)
-- `GET /customers/:id/measurements` (history, ordered by version/date)
-- Frontend: "Add Measurement" flow — pick garment type $\rightarrow$ template fields render dynamically with English & Nepali labels $\rightarrow$ save
+- Prisma models: `Order`, `OrderItem`, `OrderStatus` enum
+- `GET/POST/PATCH /orders` (Order creation with line items, cost calculation, status updates: DRAFT $\rightarrow$ CONFIRMED $\rightarrow$ IN_PROGRESS $\rightarrow$ READY $\rightarrow$ DELIVERED $\rightarrow$ CANCELLED)
+- Frontend: Order creation form, Order list page with status filter, Order Detail view with status workflow buttons
 
 ## Blockers / Open Questions
 
@@ -73,3 +75,4 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 | 2026-08-27 | Architectural Refactoring: Implemented dynamic roles, granular permission matrix, and modern collapsible sidebar. |
 | 2026-08-27 | Built Milestone 3 (Customer Management). Implemented Customer database model, tenant-isolated API routes with real-time search, Customer List directory, Customer Detail profile, and add/edit modals. |
 | 2026-08-27 | Built Milestone 4 (Garment Types & Measurement Templates). Added English & Nepali field labels, seeded 5 standard garment templates, implemented template cloning & customization API, and created Template Management UI. |
+| 2026-08-27 | Built Milestone 5 (Measurements). Implemented Measurement model with versioning, tenant-isolated API endpoints, dynamic bilingual (English & Nepali) measurement recording modal, and Customer Detail measurements history viewer. |

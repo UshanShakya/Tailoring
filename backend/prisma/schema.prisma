@@ -21,6 +21,7 @@ model Business {
   customers            Customer[]
   garmentTypes         GarmentType[]
   measurementTemplates MeasurementTemplate[]
+  measurements         Measurement[]
 }
 
 model Role {
@@ -60,6 +61,8 @@ model Customer {
   createdBy  String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  measurements Measurement[]
 }
 
 model GarmentType {
@@ -71,7 +74,7 @@ model GarmentType {
   isSystemDefault Boolean  @default(false)
   createdAt       DateTime @default(now())
 
-  templates       MeasurementTemplate[]
+  templates MeasurementTemplate[]
 }
 
 model MeasurementTemplate {
@@ -85,7 +88,8 @@ model MeasurementTemplate {
   isSystemDefault Boolean  @default(false)
   createdAt       DateTime @default(now())
 
-  fields          TemplateField[]
+  fields       TemplateField[]
+  measurements Measurement[]
 }
 
 model TemplateField {
@@ -99,4 +103,19 @@ model TemplateField {
   dataType    String   // "number" | "text"
   order       Int
   required    Boolean  @default(true)
+}
+
+model Measurement {
+  id          String              @id @default(uuid())
+  businessId  String
+  business    Business            @relation(fields: [businessId], references: [id])
+  customerId  String
+  customer    Customer            @relation(fields: [customerId], references: [id])
+  templateId  String
+  template    MeasurementTemplate @relation(fields: [templateId], references: [id])
+  version     Int                 @default(1)
+  values      Json                // { "chest": 38.5, "shoulder": 17.0, "sleeveLength": 24.5 }
+  notes       String?
+  takenBy     String
+  createdAt   DateTime            @default(now())
 }

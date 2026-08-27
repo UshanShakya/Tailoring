@@ -6,6 +6,7 @@ import businessesRoutes from './modules/businesses/businesses.routes';
 import rolesRoutes from './modules/roles/roles.routes';
 import customersRoutes from './modules/customers/customers.routes';
 import templatesRoutes from './modules/templates/templates.routes';
+import measurementsRoutes from './modules/measurements/measurements.routes';
 import { adminUsersRouter, tenantUsersRouter } from './modules/users/users.routes';
 
 dotenv.config();
@@ -24,6 +25,7 @@ app.use('/users', tenantUsersRouter);
 app.use('/roles', rolesRoutes);
 app.use('/customers', customersRoutes);
 app.use('/', templatesRoutes);
+app.use('/', measurementsRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
