@@ -8,6 +8,7 @@ import {
   ShieldAlert,
   UserCheck,
   Ruler,
+  ShoppingBag,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -68,6 +69,12 @@ export const Sidebar: React.FC = () => {
       to: '/dashboard/templates',
       icon: Ruler,
       show: hasPermission('menu:templates'),
+    },
+    {
+      label: 'Orders',
+      to: '/dashboard/orders',
+      icon: ShoppingBag,
+      show: hasPermission('menu:orders'),
     },
   ];
 

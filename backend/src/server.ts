@@ -7,6 +7,7 @@ import rolesRoutes from './modules/roles/roles.routes';
 import customersRoutes from './modules/customers/customers.routes';
 import templatesRoutes from './modules/templates/templates.routes';
 import measurementsRoutes from './modules/measurements/measurements.routes';
+import ordersRoutes from './modules/orders/orders.routes';
 import { adminUsersRouter, tenantUsersRouter } from './modules/users/users.routes';
 
 dotenv.config();
@@ -24,6 +25,7 @@ app.use('/admin/users', adminUsersRouter);
 app.use('/users', tenantUsersRouter);
 app.use('/roles', rolesRoutes);
 app.use('/customers', customersRoutes);
+app.use('/orders', ordersRoutes);
 app.use('/', templatesRoutes);
 app.use('/', measurementsRoutes);
 

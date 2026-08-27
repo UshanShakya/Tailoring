@@ -12,6 +12,8 @@ import { RoleManagementPage } from './pages/roles/RoleManagementPage';
 import { CustomerListPage } from './pages/customers/CustomerListPage';
 import { CustomerDetailPage } from './pages/customers/CustomerDetailPage';
 import { TemplateManagementPage } from './pages/templates/TemplateManagementPage';
+import { OrderListPage } from './pages/orders/OrderListPage';
+import { OrderDetailPage } from './pages/orders/OrderDetailPage';
 
 const queryClient = new QueryClient();
 
@@ -46,6 +48,11 @@ export const App: React.FC = () => {
 
                 <Route element={<ProtectedRoute requiredPermission="menu:templates" />}>
                   <Route path="templates" element={<TemplateManagementPage />} />
+                </Route>
+
+                <Route element={<ProtectedRoute requiredPermission="menu:orders" />}>
+                  <Route path="orders" element={<OrderListPage />} />
+                  <Route path="orders/:id" element={<OrderDetailPage />} />
                 </Route>
               </Route>
             </Route>

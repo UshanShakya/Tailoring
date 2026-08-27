@@ -8,6 +8,15 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum OrderStatus {
+  DRAFT
+  CONFIRMED
+  IN_PROGRESS
+  READY
+  DELIVERED
+  CANCELLED
+}
+
 model Business {
   id        String   @id @default(uuid())
   name      String
@@ -22,6 +31,7 @@ model Business {
   garmentTypes         GarmentType[]
   measurementTemplates MeasurementTemplate[]
   measurements         Measurement[]
+  orders               Order[]
 }
 
 model Role {
@@ -63,6 +73,7 @@ model Customer {
   updatedAt  DateTime @updatedAt
 
   measurements Measurement[]
+  orders       Order[]
 }
 
 model GarmentType {
@@ -74,7 +85,8 @@ model GarmentType {
   isSystemDefault Boolean  @default(false)
   createdAt       DateTime @default(now())
 
-  templates MeasurementTemplate[]
+  templates  MeasurementTemplate[]
+  orderItems OrderItem[]
 }
 
 model MeasurementTemplate {
@@ -118,4 +130,35 @@ model Measurement {
   notes       String?
   takenBy     String
   createdAt   DateTime            @default(now())
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  businessId  String
+  business    Business    @relation(fields: [businessId], references: [id])
+  customerId  String
+  customer    Customer    @relation(fields: [customerId], references: [id])
+  orderNumber String      // e.g. "ORD-2026-0001"
+  status      OrderStatus @default(DRAFT)
+  totalAmount Decimal     @db.Decimal(10, 2)
+  dueDate     DateTime?
+  notes       String?
+  createdById String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  items OrderItem[]
+}
+
+model OrderItem {
+  id                  String      @id @default(uuid())
+  orderId             String
+  order               Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  garmentTypeId       String
+  garmentType         GarmentType @relation(fields: [garmentTypeId], references: [id])
+  quantity            Int         @default(1)
+  unitPrice           Decimal     @db.Decimal(10, 2)
+  totalPrice          Decimal     @db.Decimal(10, 2)
+  fabricNotes         String?
+  specialInstructions String?
 }
