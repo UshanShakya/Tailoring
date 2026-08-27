@@ -62,6 +62,7 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 - [x] Backend endpoint `GET /dashboard/stats` (2026-08-27)
 - [x] Frontend: Upgraded Overview Dashboard (`OverviewPage.tsx`) with active metrics, revenue totals, outstanding balance due, quick action shortcuts, and live Audit Trail Activity feed (2026-08-27)
 - [x] Milestone 9: Currency standardization to Nepalese Rupees (`Rs. 1,750.00`), Light/Dark theme system with TopBar toggle, tenant- & permission-scoped Global Search API & popup combobox, reusable BackButton & PageHeader, local Select2 combobox with async API search, and invoice print styles (2026-08-27)
+- [x] Role Groups & User Group Assignment: `RoleGroup` & `RoleGroupMapping` database models, permission aggregation engine, `/role-groups` API module, Role Group management page (`RoleGroupManagementPage.tsx`), and staff user group assignment (2026-08-27)
 
 ## In Progress
 

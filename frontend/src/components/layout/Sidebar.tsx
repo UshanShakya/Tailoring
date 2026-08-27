@@ -60,6 +60,12 @@ export const Sidebar: React.FC = () => {
       show: hasPermission('menu:roles'),
     },
     {
+      label: 'Role Groups',
+      to: '/dashboard/role-groups',
+      icon: Users,
+      show: hasPermission('menu:roles') || hasPermission('menu:role-groups'),
+    },
+    {
       label: 'Customers',
       to: '/dashboard/customers',
       icon: UserCheck,

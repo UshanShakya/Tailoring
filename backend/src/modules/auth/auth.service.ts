@@ -18,12 +18,38 @@ const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'fallback-refresh-secre
 const ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '15m';
 const REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 
+// Aggregate effective permissions from primary Role + assigned RoleGroup
+function calculateEffectivePermissions(role: any, roleGroup?: any): string[] {
+  const permSet = new Set<string>();
+
+  const rolePerms = (role?.permissions as string[]) || [];
+  rolePerms.forEach((p) => permSet.add(p));
+
+  if (roleGroup && roleGroup.roles) {
+    for (const mapping of roleGroup.roles) {
+      const groupRolePerms = (mapping.role?.permissions as string[]) || [];
+      groupRolePerms.forEach((p) => permSet.add(p));
+    }
+  }
+
+  return Array.from(permSet);
+}
+
 export async function loginUser(input: z.infer<typeof loginSchema>) {
   const user = await prisma.user.findUnique({
     where: { email: input.email },
     include: {
       business: true,
       role: true,
+      roleGroup: {
+        include: {
+          roles: {
+            include: {
+              role: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -36,7 +62,7 @@ export async function loginUser(input: z.infer<typeof loginSchema>) {
     throw { status: 401, code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' };
   }
 
-  const permissions = (user.role.permissions as string[]) || [];
+  const permissions = calculateEffectivePermissions(user.role, user.roleGroup);
 
   const payload: JwtPayloadUser = {
     userId: user.id,
@@ -61,6 +87,13 @@ export async function loginUser(input: z.infer<typeof loginSchema>) {
         permissions,
         isSystem: user.role.isSystem,
       },
+      roleGroup: user.roleGroup
+        ? {
+            id: user.roleGroup.id,
+            name: user.roleGroup.name,
+            description: user.roleGroup.description,
+          }
+        : null,
       businessId: user.businessId,
       businessName: user.business?.name || null,
     },
@@ -78,6 +111,15 @@ export async function refreshTokens(refreshToken: string) {
       include: {
         business: true,
         role: true,
+        roleGroup: {
+          include: {
+            roles: {
+              include: {
+                role: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -85,7 +127,7 @@ export async function refreshTokens(refreshToken: string) {
       throw { status: 401, code: 'UNAUTHORIZED', message: 'User account is inactive or deleted' };
     }
 
-    const permissions = (user.role.permissions as string[]) || [];
+    const permissions = calculateEffectivePermissions(user.role, user.roleGroup);
 
     const payload: JwtPayloadUser = {
       userId: user.id,
@@ -110,6 +152,13 @@ export async function refreshTokens(refreshToken: string) {
           permissions,
           isSystem: user.role.isSystem,
         },
+        roleGroup: user.roleGroup
+          ? {
+              id: user.roleGroup.id,
+              name: user.roleGroup.name,
+              description: user.roleGroup.description,
+            }
+          : null,
         businessId: user.businessId,
         businessName: user.business?.name || null,
       },
@@ -146,6 +195,18 @@ export async function getUserProfile(userId: string) {
           isSystem: true,
         },
       },
+      roleGroup: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          roles: {
+            select: {
+              role: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -153,12 +214,14 @@ export async function getUserProfile(userId: string) {
     throw { status: 404, code: 'NOT_FOUND', message: 'User profile not found' };
   }
 
+  const permissions = calculateEffectivePermissions(user.role, user.roleGroup);
+
   return {
     ...user,
     role: {
       id: user.role.id,
       name: user.role.name,
-      permissions: (user.role.permissions as string[]) || [],
+      permissions,
       isSystem: user.role.isSystem,
     },
   };

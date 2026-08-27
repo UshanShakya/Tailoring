@@ -11,6 +11,7 @@ import ordersRoutes from './modules/orders/orders.routes';
 import invoicesRoutes from './modules/invoices/invoices.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
 import searchRoutes from './modules/search/search.routes';
+import roleGroupsRoutes from './modules/role-groups/role-groups.routes';
 import { adminUsersRouter, tenantUsersRouter } from './modules/users/users.routes';
 
 dotenv.config();
@@ -27,6 +28,7 @@ app.use('/admin/businesses', businessesRoutes);
 app.use('/admin/users', adminUsersRouter);
 app.use('/users', tenantUsersRouter);
 app.use('/roles', rolesRoutes);
+app.use('/role-groups', roleGroupsRoutes);
 app.use('/customers', customersRoutes);
 app.use('/orders', ordersRoutes);
 app.use('/invoices', invoicesRoutes);

@@ -41,6 +41,7 @@ model Business {
 
   users                User[]
   roles                Role[]
+  roleGroups           RoleGroup[]
   customers            Customer[]
   garmentTypes         GarmentType[]
   measurementTemplates MeasurementTemplate[]
@@ -49,6 +50,28 @@ model Business {
   invoices             Invoice[]
   payments             Payment[]
   auditLogs            AuditLog[]
+}
+
+model RoleGroup {
+  id          String    @id @default(uuid())
+  businessId  String?   // null = system default role group
+  business    Business? @relation(fields: [businessId], references: [id])
+  name        String    // e.g. "Tailoring Operations Group", "Finance & Billing Group"
+  description String?
+  isSystem    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  roles RoleGroupMapping[]
+  users User[]
+}
+
+model RoleGroupMapping {
+  roleGroupId String
+  roleGroup   RoleGroup @relation(fields: [roleGroupId], references: [id], onDelete: Cascade)
+  roleId      String
+  role        Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([roleGroupId, roleId])
 }
 
 model Role {
@@ -61,20 +84,23 @@ model Role {
   isSystem    Boolean  @default(false)
   createdAt   DateTime @default(now())
 
-  users User[]
+  users             User[]
+  roleGroupMappings RoleGroupMapping[]
 }
 
 model User {
-  id           String    @id @default(uuid())
-  businessId   String?   // null only for SUPER_ADMIN
-  business     Business? @relation(fields: [businessId], references: [id])
+  id           String     @id @default(uuid())
+  businessId   String?    // null only for SUPER_ADMIN
+  business     Business?  @relation(fields: [businessId], references: [id])
   name         String
-  email        String    @unique
+  email        String     @unique
   passwordHash String
   roleId       String
-  role         Role      @relation(fields: [roleId], references: [id])
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
+  role         Role       @relation(fields: [roleId], references: [id])
+  roleGroupId  String?
+  roleGroup    RoleGroup? @relation(fields: [roleGroupId], references: [id])
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
 }
 
 model Customer {

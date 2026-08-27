@@ -4,8 +4,8 @@ import { performGlobalSearch } from './search.service';
 export async function searchHandler(req: Request, res: Response) {
   try {
     const q = req.query.q as string | undefined;
-    const userRoleName = req.user?.role?.name;
-    const userPermissions = (req.user?.role?.permissions as string[]) || [];
+    const userRoleName = req.user?.roleName;
+    const userPermissions = (req.user?.permissions as string[]) || [];
 
     const results = await performGlobalSearch(req.businessId || null, userRoleName, userPermissions, q || '');
     return res.json(results);

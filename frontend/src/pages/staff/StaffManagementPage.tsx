@@ -5,14 +5,23 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import { Badge } from '../../components/ui/Badge';
-import { Users, UserPlus, Shield, CheckCircle2, XCircle } from 'lucide-react';
+import { Select2Combobox } from '../../components/ui/Select2Combobox';
+import { PageHeader } from '../../components/ui/PageHeader';
+import { Users, UserPlus, Shield, CheckCircle2, XCircle, Edit3 } from 'lucide-react';
 import { Role } from '../../types/auth';
+
+interface RoleGroup {
+  id: string;
+  name: string;
+  description?: string;
+}
 
 interface StaffUser {
   id: string;
   name: string;
   email: string;
   role: Role;
+  roleGroup?: RoleGroup | null;
   isActive: boolean;
   createdAt: string;
 }
@@ -20,27 +29,32 @@ interface StaffUser {
 export const StaffManagementPage: React.FC = () => {
   const [staffList, setStaffList] = useState<StaffUser[]>([]);
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
+  const [availableRoleGroups, setAvailableRoleGroups] = useState<RoleGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Modal State
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
+  const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [roleId, setRoleId] = useState<string>('');
+  const [roleGroupId, setRoleGroupId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [usersData, rolesData] = await Promise.all([
+      const [usersData, rolesData, groupsData] = await Promise.all([
         fetchWithAuth<StaffUser[]>('/users'),
         fetchWithAuth<Role[]>('/roles'),
+        fetchWithAuth<RoleGroup[]>('/role-groups'),
       ]);
       setStaffList(usersData);
       setAvailableRoles(rolesData);
-      if (rolesData.length > 0) {
+      setAvailableRoleGroups(groupsData);
+      if (rolesData.length > 0 && !roleId) {
         setRoleId(rolesData[0].id);
       }
     } catch (err: any) {
@@ -54,7 +68,27 @@ export const StaffManagementPage: React.FC = () => {
     loadData();
   }, []);
 
-  const handleAddStaff = async (e: React.FormEvent) => {
+  const handleOpenAdd = () => {
+    setEditingStaffId(null);
+    setName('');
+    setEmail('');
+    setPassword('');
+    if (availableRoles.length > 0) setRoleId(availableRoles[0].id);
+    setRoleGroupId('');
+    setIsAddStaffOpen(true);
+  };
+
+  const handleOpenEdit = (user: StaffUser) => {
+    setEditingStaffId(user.id);
+    setName(user.name);
+    setEmail(user.email);
+    setPassword('');
+    setRoleId(user.role?.id || '');
+    setRoleGroupId(user.roleGroup?.id || '');
+    setIsAddStaffOpen(true);
+  };
+
+  const handleSaveStaff = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!roleId) {
       alert('Please select a role');
@@ -62,17 +96,31 @@ export const StaffManagementPage: React.FC = () => {
     }
     setIsSubmitting(true);
     try {
-      await fetchWithAuth('/users', {
-        method: 'POST',
-        body: JSON.stringify({ name, email, password, roleId }),
-      });
-      setName('');
-      setEmail('');
-      setPassword('');
+      if (editingStaffId) {
+        await fetchWithAuth(`/users/${editingStaffId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            name,
+            roleId,
+            roleGroupId: roleGroupId || null,
+          }),
+        });
+      } else {
+        await fetchWithAuth('/users', {
+          method: 'POST',
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+            roleId,
+            roleGroupId: roleGroupId || undefined,
+          }),
+        });
+      }
       setIsAddStaffOpen(false);
       await loadData();
     } catch (err: any) {
-      alert(err.message || 'Failed to create staff member');
+      alert(err.message || 'Failed to save staff member');
     } finally {
       setIsSubmitting(false);
     }
@@ -90,21 +138,34 @@ export const StaffManagementPage: React.FC = () => {
     }
   };
 
+  const roleOptions = availableRoles.map((r) => ({
+    value: r.id,
+    label: r.name,
+    sublabel: r.isSystem ? 'System Default Role' : 'Custom Tenant Role',
+  }));
+
+  const roleGroupOptions = availableRoleGroups.map((g) => ({
+    value: g.id,
+    label: g.name,
+    sublabel: g.description || 'Role Group',
+  }));
+
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
-        <div>
-          <h2 className="text-xl font-semibold text-ink flex items-center gap-2">
+      {/* Page Header */}
+      <PageHeader
+        title={
+          <span className="flex items-center gap-2">
             <Users className="w-6 h-6 text-teal" /> Staff Team Management
-          </h2>
-          <p className="text-xs text-muted">Manage staff accounts and assign dynamic workspace roles</p>
-        </div>
-
-        <Button onClick={() => setIsAddStaffOpen(true)} className="gap-2 text-xs">
-          <UserPlus className="w-4 h-4" /> Add Staff Member
-        </Button>
-      </div>
+          </span>
+        }
+        subtitle="Manage staff accounts, primary workspace roles, and assigned role groups"
+        actions={
+          <Button onClick={handleOpenAdd} className="gap-2 text-xs">
+            <UserPlus className="w-4 h-4" /> Add Staff Member
+          </Button>
+        }
+      />
 
       {error && (
         <div className="p-4 bg-error/10 border border-error/20 text-error rounded-md text-xs font-medium">
@@ -131,7 +192,8 @@ export const StaffManagementPage: React.FC = () => {
                 <tr>
                   <th className="px-4 py-3">Staff Name</th>
                   <th className="px-4 py-3">Email Address</th>
-                  <th className="px-4 py-3">Assigned Role</th>
+                  <th className="px-4 py-3">Primary Role</th>
+                  <th className="px-4 py-3">Assigned Role Group</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
@@ -155,11 +217,26 @@ export const StaffManagementPage: React.FC = () => {
                       </Badge>
                     </td>
                     <td className="px-4 py-3">
+                      {member.roleGroup ? (
+                        <Badge variant="teal">{member.roleGroup.name}</Badge>
+                      ) : (
+                        <span className="text-muted italic text-[11px]">No group assigned</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
                       <Badge variant={member.isActive ? 'success' : 'error'}>
                         {member.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3 text-right space-x-2">
+                      <Button
+                        variant="secondary"
+                        className="text-xs px-2.5 py-1 gap-1"
+                        onClick={() => handleOpenEdit(member)}
+                      >
+                        <Edit3 className="w-3.5 h-3.5" /> Edit
+                      </Button>
+
                       {member.role?.name !== 'Business Admin' && member.role?.name !== 'Super Admin' && (
                         <Button
                           variant="outline"
@@ -182,13 +259,13 @@ export const StaffManagementPage: React.FC = () => {
         )}
       </Card>
 
-      {/* Add Staff Modal */}
+      {/* Add / Edit Staff Modal */}
       <Modal
         isOpen={isAddStaffOpen}
         onClose={() => setIsAddStaffOpen(false)}
-        title="Add New Staff Member"
+        title={editingStaffId ? 'Edit Staff Member' : 'Add New Staff Member'}
       >
-        <form onSubmit={handleAddStaff} className="space-y-4">
+        <form onSubmit={handleSaveStaff} className="space-y-4">
           <Input
             label="Full Name"
             placeholder="e.g. Sarah Jenkins"
@@ -202,41 +279,43 @@ export const StaffManagementPage: React.FC = () => {
             placeholder="sarah@business.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={!!editingStaffId}
             required
           />
-          <Input
-            label="Initial Password"
-            type="password"
-            placeholder="Minimum 6 characters"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+          {!editingStaffId && (
+            <Input
+              label="Initial Password"
+              type="password"
+              placeholder="Minimum 6 characters"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          )}
+
+          <Select2Combobox
+            label="Primary Configured Role"
+            options={roleOptions}
+            value={roleId}
+            onChange={(val) => setRoleId(val)}
             required
           />
 
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
-              Select Configured Role
-            </label>
-            <select
-              value={roleId}
-              onChange={(e) => setRoleId(e.target.value)}
-              className="w-full bg-surface border border-border text-ink rounded-md px-3 py-2 text-sm focus:outline-none focus:border-teal"
-              required
-            >
-              {availableRoles.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name} {r.isSystem ? '(Built-in)' : '(Custom Tenant)'}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select2Combobox
+            label="Assigned Role Group (Optional)"
+            placeholder="Select Role Group for combined permissions..."
+            options={roleGroupOptions}
+            value={roleGroupId}
+            onChange={(val) => setRoleGroupId(val)}
+            clearable
+          />
 
           <div className="pt-2 flex justify-end gap-2">
             <Button variant="secondary" type="button" onClick={() => setIsAddStaffOpen(false)}>
               Cancel
             </Button>
             <Button type="submit" isLoading={isSubmitting}>
-              Add Staff Member
+              {editingStaffId ? 'Update Staff Member' : 'Add Staff Member'}
             </Button>
           </div>
         </form>

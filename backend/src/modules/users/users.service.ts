@@ -15,11 +15,13 @@ export const createStaffSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   roleId: z.string().min(1, 'Role selection is required'),
+  roleGroupId: z.string().optional().nullable(),
 });
 
 export const updateUserSchema = z.object({
   name: z.string().min(2).optional(),
   roleId: z.string().optional(),
+  roleGroupId: z.string().optional().nullable(),
   isActive: z.boolean().optional(),
 });
 
@@ -45,6 +47,12 @@ export async function listAllUsers() {
           id: true,
           name: true,
           permissions: true,
+        },
+      },
+      roleGroup: {
+        select: {
+          id: true,
+          name: true,
         },
       },
     },
@@ -115,6 +123,12 @@ export async function listTenantUsers(businessId: string) {
           permissions: true,
         },
       },
+      roleGroup: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
     },
   });
 }
@@ -138,6 +152,7 @@ export async function createStaffUser(businessId: string, input: z.infer<typeof 
     email: input.email,
     passwordHash,
     roleId: input.roleId,
+    roleGroupId: input.roleGroupId || null,
   });
 }
 
@@ -155,13 +170,24 @@ export async function updateUser(id: string, businessId: string | null, input: z
 
   return prisma.user.update({
     where: { id },
-    data: input,
+    data: {
+      name: input.name,
+      roleId: input.roleId,
+      roleGroupId: input.roleGroupId !== undefined ? input.roleGroupId : undefined,
+      isActive: input.isActive,
+    },
     select: {
       id: true,
       name: true,
       email: true,
       isActive: true,
       role: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      roleGroup: {
         select: {
           id: true,
           name: true,

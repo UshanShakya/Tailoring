@@ -9,6 +9,7 @@ import { OverviewPage } from './pages/OverviewPage';
 import { SuperAdminDashboard } from './pages/admin/SuperAdminDashboard';
 import { StaffManagementPage } from './pages/staff/StaffManagementPage';
 import { RoleManagementPage } from './pages/roles/RoleManagementPage';
+import { RoleGroupManagementPage } from './pages/roles/RoleGroupManagementPage';
 import { CustomerListPage } from './pages/customers/CustomerListPage';
 import { CustomerDetailPage } from './pages/customers/CustomerDetailPage';
 import { TemplateManagementPage } from './pages/templates/TemplateManagementPage';
@@ -41,6 +42,7 @@ export const App: React.FC = () => {
 
                 <Route element={<ProtectedRoute requiredPermission="menu:roles" />}>
                   <Route path="roles" element={<RoleManagementPage />} />
+                  <Route path="role-groups" element={<RoleGroupManagementPage />} />
                 </Route>
 
                 <Route element={<ProtectedRoute requiredPermission="menu:customers" />}>
