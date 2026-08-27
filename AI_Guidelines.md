@@ -62,8 +62,10 @@ resume across sessions.
 
 ## 6. Git & task hygiene
 
-- One task from `Tasks.md` = one focused commit (or small set of commits).
-- Commit messages: `[Milestone X] Short description of task`.
+- Track changes using Git locally (User: `ushan.shakya`, Email: `usnshakya4@gmail.com`). No remote push required unless requested.
+- Create a dedicated git commit after completing each milestone:
+  - Command: `git add .`
+  - Commit message format: `[Milestone X] Short description of completed milestone`
 - After completing a task, update `Progress_Tracker.md` immediately —
   move the item from "In Progress" to "Done," and note the next item as
   "In Progress" or leave it "Not Started" if pausing.
