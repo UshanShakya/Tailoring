@@ -410,7 +410,7 @@ export const TemplateManagementPage: React.FC = () => {
                         <Plus className="w-3.5 h-3.5 text-teal" /> Add Template
                       </Button>
 
-                      {canManage && (
+                      {canManageProductTypes && (
                         <Button
                           variant="outline"
                           className="text-xs px-2.5 py-1 gap-1"
