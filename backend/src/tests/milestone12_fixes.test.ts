@@ -97,7 +97,7 @@ async function runMilestone12Tests() {
 
     const invoice = await generateInvoiceFromOrder(tenantBusiness.id, order.id, 'test-admin');
 
-    console.assert(invoice.companyName === 'Tailoring Platform HQ', `FAIL: Seller should be Main Admin Company HQ, got: ${invoice.companyName}`);
+    console.assert(invoice.companyName === 'Main Tailoring HQ', `FAIL: Seller should be Main Admin Company HQ, got: ${invoice.companyName}`);
     console.assert(invoice.companyPan === '100200300', `FAIL: Seller PAN should be 100200300, got: ${invoice.companyPan}`);
     console.assert(invoice.business?.name === 'Branch Stitchers Boutique', `FAIL: Tenant business should be Branch Stitchers Boutique, got: ${invoice.business?.name}`);
     console.assert(invoice.customer.name === 'Milestone 12 Test Client', 'FAIL: Customer ref mismatch');

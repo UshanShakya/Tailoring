@@ -9,7 +9,8 @@ import {
 
 export async function getBusinessesHandler(req: Request, res: Response) {
   try {
-    const businesses = await listBusinesses();
+    const actorUserId = (req as any).user?.id;
+    const businesses = await listBusinesses(actorUserId);
     return res.json(businesses);
   } catch (err: any) {
     const status = err.status || 500;

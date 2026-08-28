@@ -14,8 +14,34 @@ export const updateBusinessSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export async function listBusinesses() {
+export async function listBusinesses(actorUserId?: string) {
+  // Identify Main Admin Company business (belonging to Super Admin) to exclude it from tenant lists
+  let adminBusinessId: string | null = null;
+
+  if (actorUserId) {
+    const user = await prisma.user.findUnique({
+      where: { id: actorUserId },
+      select: { role: { select: { name: true } }, businessId: true },
+    });
+    if (user && user.role?.name === 'Super Admin' && user.businessId) {
+      adminBusinessId = user.businessId;
+    }
+  }
+
+  if (!adminBusinessId) {
+    const superAdminUser = await prisma.user.findFirst({
+      where: { role: { name: 'Super Admin' }, businessId: { not: null } },
+      select: { businessId: true },
+    });
+    if (superAdminUser) {
+      adminBusinessId = superAdminUser.businessId;
+    }
+  }
+
+  const whereClause = adminBusinessId ? { id: { not: adminBusinessId } } : {};
+
   const businesses = await prisma.business.findMany({
+    where: whereClause,
     orderBy: { createdAt: 'desc' },
     include: {
       _count: {
