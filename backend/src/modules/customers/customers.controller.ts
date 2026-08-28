@@ -10,11 +10,13 @@ import {
 
 export async function getCustomersHandler(req: Request, res: Response) {
   try {
-    if (!req.businessId) {
+    const isSuperAdmin = req.user?.roleName === 'Super Admin';
+    if (!req.businessId && !isSuperAdmin) {
       return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Tenant context required' } });
     }
     const search = req.query.search as string | undefined;
-    const customers = await listCustomers(req.businessId, search);
+    const targetBusinessId = (req.query.businessId as string) || req.businessId;
+    const customers = await listCustomers(targetBusinessId, search);
     return res.json(customers);
   } catch (err: any) {
     const status = err.status || 500;

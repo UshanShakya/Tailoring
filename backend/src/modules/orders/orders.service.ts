@@ -33,9 +33,12 @@ async function generateOrderNumber(businessId: string): Promise<string> {
   return `ORD-${currentYear}-${padded}`;
 }
 
-// List Orders for Business (with search and status filter)
-export async function listOrders(businessId: string, search?: string, status?: OrderStatus) {
-  const where: any = { businessId };
+// List Orders for Business (with search and status filter, supports Super Admin global view)
+export async function listOrders(businessId?: string, search?: string, status?: OrderStatus) {
+  const where: any = {};
+  if (businessId) {
+    where.businessId = businessId;
+  }
 
   if (status) {
     where.status = status;
@@ -53,6 +56,7 @@ export async function listOrders(businessId: string, search?: string, status?: O
   return prisma.order.findMany({
     where,
     include: {
+      business: true,
       customer: true,
       items: {
         include: { garmentType: true },
@@ -63,10 +67,16 @@ export async function listOrders(businessId: string, search?: string, status?: O
 }
 
 // Get Single Order Detail
-export async function getOrderById(businessId: string, orderId: string) {
+export async function getOrderById(businessId: string | undefined, orderId: string) {
+  const where: any = { id: orderId };
+  if (businessId) {
+    where.businessId = businessId;
+  }
+
   const order = await prisma.order.findFirst({
-    where: { id: orderId, businessId },
+    where,
     include: {
+      business: true,
       customer: true,
       items: {
         include: { garmentType: true },
@@ -77,7 +87,6 @@ export async function getOrderById(businessId: string, orderId: string) {
   if (!order) {
     throw { status: 404, code: 'NOT_FOUND', message: 'Order not found' };
   }
-
   return order;
 }
 

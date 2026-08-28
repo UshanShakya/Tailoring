@@ -72,10 +72,10 @@ export const Sidebar: React.FC = () => {
       show: hasPermission('menu:customers'),
     },
     {
-      label: 'Templates',
+      label: 'Product Types & Templates',
       to: '/dashboard/templates',
       icon: Ruler,
-      show: hasPermission('menu:templates'),
+      show: user?.role?.name === 'Super Admin' || hasPermission('menu:templates'),
     },
     {
       label: 'Orders',

@@ -11,12 +11,14 @@ import {
 
 export async function getOrdersHandler(req: Request, res: Response) {
   try {
-    if (!req.businessId) {
+    const isSuperAdmin = req.user?.roleName === 'Super Admin';
+    if (!req.businessId && !isSuperAdmin) {
       return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Tenant context required' } });
     }
     const search = req.query.search as string | undefined;
     const status = req.query.status as OrderStatus | undefined;
-    const orders = await listOrders(req.businessId, search, status);
+    const targetBusinessId = (req.query.businessId as string) || req.businessId;
+    const orders = await listOrders(targetBusinessId, search, status);
     return res.json(orders);
   } catch (err: any) {
     const status = err.status || 500;
@@ -28,11 +30,13 @@ export async function getOrdersHandler(req: Request, res: Response) {
 
 export async function getOrderByIdHandler(req: Request, res: Response) {
   try {
-    if (!req.businessId) {
+    const isSuperAdmin = req.user?.roleName === 'Super Admin';
+    if (!req.businessId && !isSuperAdmin) {
       return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Tenant context required' } });
     }
     const { id } = req.params;
-    const order = await getOrderById(req.businessId, id);
+    const targetBusinessId = (req.query.businessId as string) || req.businessId;
+    const order = await getOrderById(targetBusinessId, id);
     return res.json(order);
   } catch (err: any) {
     const status = err.status || 500;

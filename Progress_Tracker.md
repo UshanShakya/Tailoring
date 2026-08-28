@@ -6,8 +6,8 @@
 
 ## Current Status
 
-**Active Milestone:** — (All Milestones 1–10 Complete)
-**Overall status:** Project Complete (Milestones 1-10 Complete)
+**Active Milestone:** — (All Milestones 1–13 Complete)
+**Overall status:** Project Complete (Milestones 1-13 Complete)
 
 ## Milestone Overview
 
@@ -23,6 +23,9 @@
 | 8. Dashboards, Audit Log, Polish | Done | `AuditLog` database model, automated audit logger utility, `/dashboard/stats` backend API, and live executive dashboard on `OverviewPage.tsx`. |
 | 9. Global UX & Application Quality of Life | Done | Nepalese Rupee formatting (`Rs. 1,750.00`), Light/Dark theme system with TopBar toggle, tenant- & permission-scoped Global Search API & combobox, reusable BackButton & PageHeader, local Select2 combobox with async API search, and invoice print styles. |
 | 10. Company Setup, Pricing & Nepal Billing | Done | Company setup profile, PAN/VAT # registration, Cloudinary logo upload, optional garment default pricing, permanent invoice price snapshotting, Nepalese A4 billing print receipt, and automated test suite. |
+| 11. Product Type Setup | Done | Product Types management setup UI, default unit price configuration, bilingual naming (English & Nepali), measurement template mapping filter, and automated test suite. |
+| 12. Issue Fixes | Done | Main Admin Company invoice seller snapshotting & B2B layout, isolated #printable-invoice print CSS, Super Admin business-wise filtering for orders/invoices/customers, and Super Admin Product Type CRUD authorization. |
+| 13. Remember Me in Login UI | Done | Remember Me checkbox session persistence across browser restarts (localStorage vs sessionStorage), token storage utility helpers, and removed development quick-fill UI. |
 
 _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 
@@ -65,6 +68,9 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 - [x] Milestone 9: Currency standardization to Nepalese Rupees (`Rs. 1,750.00`), Light/Dark theme system with TopBar toggle, tenant- & permission-scoped Global Search API & popup combobox, reusable BackButton & PageHeader, local Select2 combobox with async API search, and invoice print styles (2026-08-27)
 - [x] Role Groups & User Group Assignment: `RoleGroup` & `RoleGroupMapping` database models, permission aggregation engine, `/role-groups` API module, Role Group management page (`RoleGroupManagementPage.tsx`), and staff user group assignment (2026-08-27)
 - [x] Milestone 10: Company Setup, Pricing & Nepal Billing — Company settings API, Cloudinary logo upload, optional garment default pricing, permanent invoice price snapshotting, Nepalese A4 billing print receipt, and 5 automated billing unit tests (2026-08-27)
+- [x] Milestone 11: Product Type Setup — Product Types setup UI tab, default unit price manager, bilingual naming (English & Nepali), measurement template mapping filter, and 4 automated test cases (2026-08-28)
+- [x] Milestone 12: Issue Fixes — Main Admin Company invoice seller snapshotting & B2B layout, isolated #printable-invoice print CSS, Super Admin business-wise filtering for orders/invoices/customers, Super Admin Product Type CRUD authorization, and 3 automated test cases (2026-08-28)
+- [x] Milestone 13: Remember Me in Login UI — Remember Me checkbox session persistence across browser restarts, token storage helpers (localStorage vs sessionStorage), and removed development quick-fill UI (2026-08-28)
 
 ## In Progress
 

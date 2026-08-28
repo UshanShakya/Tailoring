@@ -4,13 +4,31 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding database with dynamic roles and measurement templates with Nepali labels...');
+  console.log('🧹 Cleaning up database: removing demo data and non-system records...');
 
-  const passwordHashSuper = await bcrypt.hash('SuperAdmin123!', 10);
-  const passwordHashAdmin = await bcrypt.hash('Admin123!', 10);
-  const passwordHashStaff = await bcrypt.hash('Staff123!', 10);
+  // 1. Wipe transactional and demo data
+  await prisma.payment.deleteMany({});
+  await prisma.invoice.deleteMany({});
+  await prisma.orderItem.deleteMany({});
+  await prisma.order.deleteMany({});
+  await prisma.measurement.deleteMany({});
+  await prisma.customer.deleteMany({});
+  await prisma.auditLog.deleteMany({});
+  await prisma.user.deleteMany({});
+  await prisma.roleGroupMapping.deleteMany({});
+  await prisma.roleGroup.deleteMany({});
 
-  // 1. Create System Default Roles with Template Permissions
+  // Wipe custom tenant templates and product types
+  await prisma.templateField.deleteMany({ where: { template: { isSystemDefault: false } } });
+  await prisma.measurementTemplate.deleteMany({ where: { isSystemDefault: false } });
+  await prisma.garmentType.deleteMany({ where: { isSystemDefault: false } });
+  await prisma.role.deleteMany({ where: { isSystem: false } });
+  await prisma.business.deleteMany({});
+
+  console.log('✅ Demo data wiped successfully.');
+
+  // 2. Create System Default Roles
+  console.log('🌱 Seeding system default roles...');
   const superAdminRole = await prisma.role.upsert({
     where: { id: 'role-super-admin' },
     update: {
@@ -26,7 +44,7 @@ async function main() {
     },
   });
 
-  const businessAdminRole = await prisma.role.upsert({
+  await prisma.role.upsert({
     where: { id: 'role-business-admin' },
     update: {
       permissions: [
@@ -71,7 +89,7 @@ async function main() {
     },
   });
 
-  const staffFullRole = await prisma.role.upsert({
+  await prisma.role.upsert({
     where: { id: 'role-staff-full' },
     update: {
       permissions: [
@@ -108,7 +126,7 @@ async function main() {
     },
   });
 
-  const staffBasicRole = await prisma.role.upsert({
+  await prisma.role.upsert({
     where: { id: 'role-staff-basic' },
     update: {
       permissions: [
@@ -139,75 +157,41 @@ async function main() {
     },
   });
 
-  console.log('✅ System roles seeded.');
+  console.log('✅ System roles created.');
 
-  // 2. Create Users
-  const superAdmin = await prisma.user.upsert({
-    where: { email: 'superadmin@platform.com' },
-    update: { roleId: superAdminRole.id },
-    create: {
+  // 3. Create Main Admin Company Business
+  console.log('🌱 Seeding Main Admin Company business...');
+  const mainBusiness = await prisma.business.create({
+    data: {
+      name: 'Main Tailoring HQ',
+      address: 'Durbar Marg, Kathmandu, Nepal',
+      phone: '+977-1-4200000',
+      email: 'contact@tailor.com',
+      panNumber: '100200300',
+      isVatRegistered: true,
+      taxRate: 13.0,
+      invoiceNote: 'Thank you for choosing Main Tailoring HQ.',
+    },
+  });
+
+  // 4. Create Single Super Admin Account (admin@tailor.com / Password@123)
+  console.log('🔑 Creating SINGLE Super Admin account (admin@tailor.com)...');
+  const passwordHash = await bcrypt.hash('Password@123', 10);
+
+  const superAdminUser = await prisma.user.create({
+    data: {
       name: 'Super Admin',
-      email: 'superadmin@platform.com',
-      passwordHash: passwordHashSuper,
+      email: 'admin@tailor.com',
+      passwordHash: passwordHash,
       roleId: superAdminRole.id,
-      businessId: null,
+      businessId: mainBusiness.id,
     },
   });
 
-  let business = await prisma.business.findFirst({
-    where: { name: 'Stitch & Style Tailors' },
-  });
+  console.log(`✅ Super Admin created: ${superAdminUser.email}`);
 
-  if (!business) {
-    business = await prisma.business.create({
-      data: {
-        name: 'Stitch & Style Tailors',
-        address: '123 Fashion Street, Suit City',
-        phone: '+1-555-0199',
-      },
-    });
-  }
-
-  await prisma.user.upsert({
-    where: { email: 'admin@stitchandstyle.com' },
-    update: { roleId: businessAdminRole.id, businessId: business.id },
-    create: {
-      name: 'Master Tailor Admin',
-      email: 'admin@stitchandstyle.com',
-      passwordHash: passwordHashAdmin,
-      roleId: businessAdminRole.id,
-      businessId: business.id,
-    },
-  });
-
-  await prisma.user.upsert({
-    where: { email: 'staff.full@stitchandstyle.com' },
-    update: { roleId: staffFullRole.id, businessId: business.id },
-    create: {
-      name: 'Full Staff Member',
-      email: 'staff.full@stitchandstyle.com',
-      passwordHash: passwordHashStaff,
-      roleId: staffFullRole.id,
-      businessId: business.id,
-    },
-  });
-
-  await prisma.user.upsert({
-    where: { email: 'staff.basic@stitchandstyle.com' },
-    update: { roleId: staffBasicRole.id, businessId: business.id },
-    create: {
-      name: 'Basic Staff Member',
-      email: 'staff.basic@stitchandstyle.com',
-      passwordHash: passwordHashStaff,
-      roleId: staffBasicRole.id,
-      businessId: business.id,
-    },
-  });
-
-  console.log('✅ Base users seeded.');
-
-  // 3. Seed System Default Garment Types & Measurement Templates (with Nepali Labels)
-  console.log('🌱 Seeding standard system default garment templates with English & Nepali labels...');
+  // 5. Seed System Default Garment Types & Measurement Templates
+  console.log('🌱 Seeding system default product types and templates...');
 
   const systemGarments = [
     {
@@ -312,10 +296,8 @@ async function main() {
       },
     });
 
-    // Delete existing fields to re-seed cleanly
     await prisma.templateField.deleteMany({ where: { templateId: template.id } });
 
-    // Seed Template Fields
     for (const f of item.fields) {
       await prisma.templateField.create({
         data: {
@@ -330,10 +312,10 @@ async function main() {
         },
       });
     }
-    console.log(`  ✓ Template seeded for ${item.name} (${item.nameNp})`);
   }
 
-  console.log('🎉 Seeding completed successfully!');
+  console.log('🎉 Database cleaned and single Super Admin account initialized!');
+  console.log('🔑 Credentials: admin@tailor.com | Password: Password@123');
 }
 
 main()

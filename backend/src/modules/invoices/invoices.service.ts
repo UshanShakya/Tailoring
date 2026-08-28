@@ -20,9 +20,12 @@ async function generateInvoiceNumber(businessId: string): Promise<string> {
   return `INV-${currentYear}-${padded}`;
 }
 
-// List Invoices for Business (with search and status filter)
-export async function listInvoices(businessId: string, search?: string, status?: InvoiceStatus) {
-  const where: any = { businessId };
+// List Invoices for Business (with search and status filter, supports Super Admin global view)
+export async function listInvoices(businessId?: string, search?: string, status?: InvoiceStatus) {
+  const where: any = {};
+  if (businessId) {
+    where.businessId = businessId;
+  }
 
   if (status) {
     where.status = status;
@@ -41,6 +44,7 @@ export async function listInvoices(businessId: string, search?: string, status?:
   return prisma.invoice.findMany({
     where,
     include: {
+      business: true,
       customer: true,
       order: {
         include: {
@@ -58,10 +62,16 @@ export async function listInvoices(businessId: string, search?: string, status?:
 }
 
 // Get Single Invoice Detail
-export async function getInvoiceById(businessId: string, invoiceId: string) {
+export async function getInvoiceById(businessId: string | undefined, invoiceId: string) {
+  const where: any = { id: invoiceId };
+  if (businessId) {
+    where.businessId = businessId;
+  }
+
   const invoice = await prisma.invoice.findFirst({
-    where: { id: invoiceId, businessId },
+    where,
     include: {
+      business: true,
       customer: true,
       order: {
         include: {
@@ -90,21 +100,46 @@ export async function generateInvoiceFromOrder(businessId: string, orderId: stri
   // Check if invoice already exists for this order
   const existing = await prisma.invoice.findUnique({
     where: { orderId: order.id },
+    include: {
+      business: true,
+      customer: true,
+      order: {
+        include: {
+          items: {
+            include: { garmentType: true },
+          },
+        },
+      },
+      payments: true,
+    },
   });
 
   if (existing) {
     return existing;
   }
 
-  // Fetch Business Company Profile for Snapshot
-  const business = await prisma.business.findUnique({
+  // Fetch Main Admin Company Profile (Managed by Super Admin)
+  const superAdminUser = await prisma.user.findFirst({
+    where: { role: { name: 'Super Admin' } },
+    include: { business: true },
+  });
+
+  const adminCompany = superAdminUser?.business || (await prisma.business.findFirst({
+    where: { panNumber: { not: null } },
+    orderBy: { createdAt: 'asc' },
+  }));
+
+  // Tenant Business taking order
+  const tenantBusiness = await prisma.business.findUnique({
     where: { id: businessId },
   });
 
   const invoiceNumber = await generateInvoiceNumber(businessId);
   const subtotal = Number(order.totalAmount);
-  const isVat = business?.isVatRegistered || false;
-  const taxRate = isVat ? Number(business?.taxRate || 13) : 0;
+  
+  // Use Admin Company tax & PAN settings if available, else tenant fallback
+  const isVat = adminCompany?.isVatRegistered ?? tenantBusiness?.isVatRegistered ?? false;
+  const taxRate = isVat ? Number(adminCompany?.taxRate || tenantBusiness?.taxRate || 13) : 0;
   const taxAmount = isVat ? Math.round((subtotal * (taxRate / 100)) * 100) / 100 : 0;
   const totalAmount = Math.round((subtotal + taxAmount) * 100) / 100;
 
@@ -116,12 +151,12 @@ export async function generateInvoiceFromOrder(businessId: string, orderId: stri
       invoiceNumber,
       status: InvoiceStatus.UNPAID,
       
-      // Permanent Company Snapshot
-      companyName: business?.name || 'Bespoke Tailoring',
-      companyPan: business?.panNumber || null,
-      companyAddress: business?.address || null,
-      companyPhone: business?.phone || null,
-      companyLogoUrl: business?.logoUrl || null,
+      // Permanent Main Admin Company Seller Snapshot
+      companyName: adminCompany?.name || 'Main Admin Tailoring Headquarters',
+      companyPan: adminCompany?.panNumber || '100000000',
+      companyAddress: adminCompany?.address || 'Headquarters, Kathmandu, Nepal',
+      companyPhone: adminCompany?.phone || '+977-1-4000000',
+      companyLogoUrl: adminCompany?.logoUrl || tenantBusiness?.logoUrl || null,
       isVatRegistered: isVat,
       taxRate,
       subtotal,
@@ -130,9 +165,10 @@ export async function generateInvoiceFromOrder(businessId: string, orderId: stri
       paidAmount: 0,
       dueAmount: totalAmount,
       dueDate: order.dueDate,
-      notes: order.notes || business?.invoiceNote || null,
+      notes: order.notes || adminCompany?.invoiceNote || tenantBusiness?.invoiceNote || null,
     },
     include: {
+      business: true,
       customer: true,
       order: {
         include: {

@@ -1,12 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { fetchWithAuth } from '../../lib/api';
+import { formatCurrency } from '../../lib/currency';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import { Badge } from '../../components/ui/Badge';
-import { Ruler, Copy, Eye, Edit3, Plus, Lock, Languages } from 'lucide-react';
+import {
+  Ruler,
+  Copy,
+  Eye,
+  Edit3,
+  Plus,
+  Lock,
+  Languages,
+  Tag,
+  Shirt,
+  Layers,
+  Filter,
+} from 'lucide-react';
 
 interface TemplateField {
   id?: string;
@@ -25,6 +38,9 @@ interface GarmentType {
   nameNp?: string;
   defaultPrice?: number | null;
   isSystemDefault: boolean;
+  _count?: {
+    templates: number;
+  };
 }
 
 interface MeasurementTemplate {
@@ -39,38 +55,54 @@ interface MeasurementTemplate {
 
 export const TemplateManagementPage: React.FC = () => {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'productTypes' | 'templates'>('productTypes');
+
   const [templates, setTemplates] = useState<MeasurementTemplate[]>([]);
   const [garmentTypes, setGarmentTypes] = useState<GarmentType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedProductTypeFilter, setSelectedProductTypeFilter] = useState<string>('ALL');
 
-  // Modals state
+  // Modals for Product Types
+  const [isCreateProductTypeOpen, setIsCreateProductTypeOpen] = useState(false);
+  const [editingProductType, setEditingProductType] = useState<GarmentType | null>(null);
+  const [ptName, setPtName] = useState('');
+  const [ptNameNp, setPtNameNp] = useState('');
+  const [ptDefaultPrice, setPtDefaultPrice] = useState<string>('');
+  const [isPtSubmitting, setIsPtSubmitting] = useState(false);
+
+  // Modals for Templates
   const [viewingTemplate, setViewingTemplate] = useState<MeasurementTemplate | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<MeasurementTemplate | null>(null);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isCreateTemplateOpen, setIsCreateTemplateOpen] = useState(false);
 
-  // Form state for Edit / Clone / Create
+  // Form state for Template Edit / Clone / Create
   const [formGarmentTypeId, setFormGarmentTypeId] = useState('');
   const [formName, setFormName] = useState('');
   const [formNameNp, setFormNameNp] = useState('');
   const [formFields, setFormFields] = useState<TemplateField[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTemplateSubmitting, setIsTemplateSubmitting] = useState(false);
 
   const perms = user?.role?.permissions || [];
+  const isSuperAdmin = user?.role?.name === 'Super Admin';
+  const canManageProductTypes = isSuperAdmin || perms.includes('*');
   const canManage = perms.includes('*') || perms.includes('template:manage') || perms.includes('template:*');
 
   const loadData = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const [tData, gData] = await Promise.all([
         fetchWithAuth<MeasurementTemplate[]>('/measurement-templates'),
         fetchWithAuth<GarmentType[]>('/garment-types'),
       ]);
       setTemplates(tData);
       setGarmentTypes(gData);
-      if (gData.length > 0) setFormGarmentTypeId(gData[0].id);
+      if (gData.length > 0 && !formGarmentTypeId) {
+        setFormGarmentTypeId(gData[0].id);
+      }
     } catch (err: any) {
-      setError(err.message || 'Failed to load templates');
+      setError(err.message || 'Failed to load setup data');
     } finally {
       setIsLoading(false);
     }
@@ -80,6 +112,60 @@ export const TemplateManagementPage: React.FC = () => {
     loadData();
   }, []);
 
+  // --- Product Type Handlers ---
+  const handleOpenCreateProductType = () => {
+    setPtName('');
+    setPtNameNp('');
+    setPtDefaultPrice('');
+    setEditingProductType(null);
+    setIsCreateProductTypeOpen(true);
+  };
+
+  const handleOpenEditProductType = (gt: GarmentType) => {
+    setEditingProductType(gt);
+    setPtName(gt.name);
+    setPtNameNp(gt.nameNp || '');
+    setPtDefaultPrice(gt.defaultPrice !== null && gt.defaultPrice !== undefined ? String(gt.defaultPrice) : '');
+    setIsCreateProductTypeOpen(true);
+  };
+
+  const handleSaveProductType = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ptName.trim()) {
+      alert('Product Type name is required.');
+      return;
+    }
+    setIsPtSubmitting(true);
+    try {
+      const payload = {
+        name: ptName.trim(),
+        nameNp: ptNameNp.trim() || undefined,
+        defaultPrice: ptDefaultPrice !== '' ? Number(ptDefaultPrice) : null,
+      };
+
+      if (editingProductType) {
+        await fetchWithAuth(`/garment-types/${editingProductType.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await fetchWithAuth('/garment-types', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+      }
+
+      setIsCreateProductTypeOpen(false);
+      setEditingProductType(null);
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || 'Failed to save Product Type');
+    } finally {
+      setIsPtSubmitting(false);
+    }
+  };
+
+  // --- Template Handlers ---
   const handleStartClone = (t: MeasurementTemplate) => {
     setEditingTemplate(t);
     setFormGarmentTypeId(t.garmentTypeId);
@@ -116,6 +202,20 @@ export const TemplateManagementPage: React.FC = () => {
     );
   };
 
+  const handleOpenCreateTemplateForProductType = (garmentTypeId: string) => {
+    setEditingTemplate(null);
+    setFormGarmentTypeId(garmentTypeId);
+    const targetGt = garmentTypes.find((g) => g.id === garmentTypeId);
+    setFormName(targetGt ? `${targetGt.name} Measurement Template` : 'Custom Template');
+    setFormNameNp(targetGt?.nameNp ? `${targetGt.nameNp} नाप ढाँचा` : '');
+    setFormFields([
+      { label: 'Length', labelNp: 'लम्बाइ', key: 'length', unit: 'in', dataType: 'number', order: 1, required: true },
+      { label: 'Chest / Bust', labelNp: 'छाती', key: 'chest', unit: 'in', dataType: 'number', order: 2, required: true },
+    ]);
+    setIsCreateTemplateOpen(true);
+    setActiveTab('templates');
+  };
+
   const handleAddFieldRow = () => {
     setFormFields([
       ...formFields,
@@ -150,10 +250,9 @@ export const TemplateManagementPage: React.FC = () => {
       alert('Please add at least one measurement field.');
       return;
     }
-    setIsSubmitting(true);
+    setIsTemplateSubmitting(true);
     try {
       if (editingTemplate && !editingTemplate.isSystemDefault) {
-        // Update existing business-owned template
         await fetchWithAuth(`/measurement-templates/${editingTemplate.id}`, {
           method: 'PATCH',
           body: JSON.stringify({
@@ -163,7 +262,6 @@ export const TemplateManagementPage: React.FC = () => {
           }),
         });
       } else {
-        // Create new or clone template
         await fetchWithAuth('/measurement-templates', {
           method: 'POST',
           body: JSON.stringify({
@@ -175,14 +273,19 @@ export const TemplateManagementPage: React.FC = () => {
         });
       }
       setEditingTemplate(null);
-      setIsCreateOpen(false);
+      setIsCreateTemplateOpen(false);
       await loadData();
     } catch (err: any) {
       alert(err.message || 'Failed to save template');
     } finally {
-      setIsSubmitting(false);
+      setIsTemplateSubmitting(false);
     }
   };
+
+  const filteredTemplates =
+    selectedProductTypeFilter === 'ALL'
+      ? templates
+      : templates.filter((t) => t.garmentTypeId === selectedProductTypeFilter);
 
   return (
     <div className="space-y-6">
@@ -190,28 +293,36 @@ export const TemplateManagementPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
           <h2 className="text-xl font-semibold text-ink flex items-center gap-2">
-            <Ruler className="w-6 h-6 text-teal" /> Measurement Templates
+            <Shirt className="w-6 h-6 text-teal" /> Product Types & Measurement Setup
           </h2>
           <p className="text-xs text-muted">
-            Standard system garment templates with English & Nepali (नेपाली) labels, customizable per business
+            Configure garment/product types (Shirt, Pant, Suit, Kurta, etc.), optional default pricing, and bilingual measurement templates
           </p>
         </div>
 
         {canManage && (
-          <Button
-            onClick={() => {
-              setEditingTemplate(null);
-              setFormName('');
-              setFormNameNp('');
-              setFormFields([
-                { label: 'Chest / Length', labelNp: 'छाती / लम्बाइ', key: 'length', unit: 'in', dataType: 'number', order: 1, required: true },
-              ]);
-              setIsCreateOpen(true);
-            }}
-            className="gap-2 text-xs"
-          >
-            <Plus className="w-4 h-4" /> Create Custom Template
-          </Button>
+          <div className="flex items-center gap-2">
+            {activeTab === 'productTypes' ? (
+              <Button onClick={handleOpenCreateProductType} className="gap-2 text-xs">
+                <Plus className="w-4 h-4" /> Add Product Type
+              </Button>
+            ) : (
+              <Button
+                onClick={() => {
+                  setEditingTemplate(null);
+                  setFormName('');
+                  setFormNameNp('');
+                  setFormFields([
+                    { label: 'Chest / Length', labelNp: 'छाती / लम्बाइ', key: 'length', unit: 'in', dataType: 'number', order: 1, required: true },
+                  ]);
+                  setIsCreateTemplateOpen(true);
+                }}
+                className="gap-2 text-xs"
+              >
+                <Plus className="w-4 h-4" /> Create Custom Template
+              </Button>
+            )}
+          </div>
         )}
       </div>
 
@@ -221,99 +332,288 @@ export const TemplateManagementPage: React.FC = () => {
         </div>
       )}
 
-      {/* Templates Grid */}
-      {isLoading ? (
-        <div className="p-8 text-center text-sm text-muted">Loading templates...</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {templates.map((t) => (
-            <Card key={t.id} className="p-5 flex flex-col justify-between space-y-4">
-              <div>
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="teal" className="text-[10px]">
-                        {t.garmentType?.name} {t.garmentType?.nameNp ? `(${t.garmentType.nameNp})` : ''}
-                      </Badge>
-                      {t.isSystemDefault ? (
-                        <Badge variant="brass" className="text-[10px] gap-1">
-                          <Lock className="w-3 h-3" /> System Default
-                        </Badge>
-                      ) : (
-                        <Badge variant="success" className="text-[10px]">
-                          Custom Tenant Template
-                        </Badge>
+      {/* Navigation Tabs */}
+      <div className="flex items-center space-x-1 border-b border-border">
+        <button
+          onClick={() => setActiveTab('productTypes')}
+          className={`px-4 py-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-colors ${
+            activeTab === 'productTypes'
+              ? 'border-teal text-teal'
+              : 'border-transparent text-muted hover:text-ink'
+          }`}
+        >
+          <Tag className="w-4 h-4" /> Product Types ({garmentTypes.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('templates')}
+          className={`px-4 py-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-colors ${
+            activeTab === 'templates'
+              ? 'border-teal text-teal'
+              : 'border-transparent text-muted hover:text-ink'
+          }`}
+        >
+          <Ruler className="w-4 h-4" /> Measurement Templates ({templates.length})
+        </button>
+      </div>
+
+      {/* TAB 1: PRODUCT TYPES SETUP */}
+      {activeTab === 'productTypes' && (
+        <div className="space-y-6">
+          {isLoading ? (
+            <div className="p-8 text-center text-sm text-muted">Loading product types...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {garmentTypes.map((gt) => {
+                const mappedTemplatesCount = gt._count?.templates || templates.filter((t) => t.garmentTypeId === gt.id).length;
+                return (
+                  <Card key={gt.id} className="p-5 flex flex-col justify-between space-y-4">
+                    <div>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-1">
+                            {gt.isSystemDefault ? (
+                              <Badge variant="brass" className="text-[10px] gap-1">
+                                <Lock className="w-3 h-3" /> System Standard
+                              </Badge>
+                            ) : (
+                              <Badge variant="success" className="text-[10px]">
+                                Custom Product Type
+                              </Badge>
+                            )}
+                            <Badge variant="teal" className="text-[10px] gap-1">
+                              <Layers className="w-3 h-3" /> {mappedTemplatesCount} {mappedTemplatesCount === 1 ? 'Template' : 'Templates'}
+                            </Badge>
+                          </div>
+                          <h3 className="text-base font-semibold text-ink">{gt.name}</h3>
+                          {gt.nameNp && <p className="text-xs text-teal font-medium">{gt.nameNp}</p>}
+                        </div>
+                      </div>
+
+                      <div className="pt-3 border-t border-border space-y-2 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted font-medium">Default Unit Price:</span>
+                          <span className="font-semibold text-ink">
+                            {gt.defaultPrice !== null && gt.defaultPrice !== undefined
+                              ? formatCurrency(gt.defaultPrice)
+                              : <em className="text-muted font-normal">Optional / Unpriced</em>}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-border flex flex-wrap items-center justify-between gap-2">
+                      <Button
+                        variant="secondary"
+                        className="text-xs px-2.5 py-1 gap-1"
+                        onClick={() => handleOpenCreateTemplateForProductType(gt.id)}
+                      >
+                        <Plus className="w-3.5 h-3.5 text-teal" /> Add Template
+                      </Button>
+
+                      {canManage && (
+                        <Button
+                          variant="outline"
+                          className="text-xs px-2.5 py-1 gap-1"
+                          onClick={() => handleOpenEditProductType(gt)}
+                        >
+                          <Edit3 className="w-3.5 h-3.5" /> Edit Pricing / Info
+                        </Button>
                       )}
                     </div>
-                    <h3 className="text-base font-semibold text-ink mt-1">
-                      {t.name}
-                    </h3>
-                    {t.nameNp && <p className="text-xs text-teal font-medium">{t.nameNp}</p>}
-                  </div>
-                </div>
-
-                {/* Field Snippets */}
-                <div className="space-y-1.5 pt-2">
-                  <span className="text-[10px] font-semibold text-muted uppercase tracking-wider block flex items-center gap-1">
-                    <Languages className="w-3 h-3 text-teal" /> Measurement Fields ({t.fields?.length || 0}):
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {t.fields?.slice(0, 5).map((f) => (
-                      <span
-                        key={f.id || f.key}
-                        className="px-2 py-0.5 rounded bg-canvas border border-border text-xs text-ink flex items-center gap-1"
-                      >
-                        <strong className="font-medium">{f.label}</strong>
-                        {f.labelNp && <span className="text-teal text-[11px]">({f.labelNp})</span>}
-                      </span>
-                    ))}
-                    {t.fields?.length > 5 && (
-                      <span className="px-2 py-0.5 rounded bg-canvas text-xs text-muted">
-                        +{t.fields.length - 5} more
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="pt-3 border-t border-border flex items-center justify-between">
-                <Button
-                  variant="secondary"
-                  className="text-xs px-2.5 py-1 gap-1"
-                  onClick={() => setViewingTemplate(t)}
-                >
-                  <Eye className="w-3.5 h-3.5 text-teal" /> View Fields
-                </Button>
-
-                {canManage && (
-                  <div className="space-x-2">
-                    {t.isSystemDefault ? (
-                      <Button
-                        variant="outline"
-                        className="text-xs px-2.5 py-1 gap-1"
-                        onClick={() => handleStartClone(t)}
-                      >
-                        <Copy className="w-3.5 h-3.5 text-brass" /> Clone & Customize
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="primary"
-                        className="text-xs px-2.5 py-1 gap-1"
-                        onClick={() => handleStartEdit(t)}
-                      >
-                        <Edit3 className="w-3.5 h-3.5" /> Edit Template
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-            </Card>
-          ))}
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Modal 1: View Template Fields */}
+      {/* TAB 2: MEASUREMENT TEMPLATES */}
+      {activeTab === 'templates' && (
+        <div className="space-y-4">
+          {/* Filter Bar */}
+          <div className="flex items-center justify-between bg-canvas p-3 rounded-lg border border-border">
+            <div className="flex items-center gap-2 text-xs">
+              <Filter className="w-4 h-4 text-teal" />
+              <span className="font-semibold text-ink">Filter by Product Type:</span>
+              <select
+                value={selectedProductTypeFilter}
+                onChange={(e) => setSelectedProductTypeFilter(e.target.value)}
+                className="bg-surface border border-border text-ink rounded px-2 py-1 text-xs focus:outline-none focus:border-teal"
+              >
+                <option value="ALL">All Product Types ({templates.length})</option>
+                {garmentTypes.map((gt) => (
+                  <option key={gt.id} value={gt.id}>
+                    {gt.name} {gt.nameNp ? `(${gt.nameNp})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Templates Grid */}
+          {isLoading ? (
+            <div className="p-8 text-center text-sm text-muted">Loading templates...</div>
+          ) : filteredTemplates.length === 0 ? (
+            <div className="p-8 text-center bg-canvas border border-border rounded-lg text-sm text-muted">
+              No measurement templates found for this product type. Click "+ Create Custom Template" above to add one.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredTemplates.map((t) => (
+                <Card key={t.id} className="p-5 flex flex-col justify-between space-y-4">
+                  <div>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="teal" className="text-[10px]">
+                            {t.garmentType?.name} {t.garmentType?.nameNp ? `(${t.garmentType.nameNp})` : ''}
+                          </Badge>
+                          {t.isSystemDefault ? (
+                            <Badge variant="brass" className="text-[10px] gap-1">
+                              <Lock className="w-3 h-3" /> System Default
+                            </Badge>
+                          ) : (
+                            <Badge variant="success" className="text-[10px]">
+                              Custom Tenant Template
+                            </Badge>
+                          )}
+                        </div>
+                        <h3 className="text-base font-semibold text-ink mt-1">
+                          {t.name}
+                        </h3>
+                        {t.nameNp && <p className="text-xs text-teal font-medium">{t.nameNp}</p>}
+                      </div>
+                    </div>
+
+                    {/* Field Snippets */}
+                    <div className="space-y-1.5 pt-2">
+                      <span className="text-[10px] font-semibold text-muted uppercase tracking-wider flex items-center gap-1">
+                        <Languages className="w-3 h-3 text-teal" /> Measurement Fields ({t.fields?.length || 0}):
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {t.fields?.slice(0, 5).map((f) => (
+                          <span
+                            key={f.id || f.key}
+                            className="px-2 py-0.5 rounded bg-canvas border border-border text-xs text-ink flex items-center gap-1"
+                          >
+                            <strong className="font-medium">{f.label}</strong>
+                            {f.labelNp && <span className="text-teal text-[11px]">({f.labelNp})</span>}
+                          </span>
+                        ))}
+                        {t.fields?.length > 5 && (
+                          <span className="px-2 py-0.5 rounded bg-canvas text-xs text-muted">
+                            +{t.fields.length - 5} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="pt-3 border-t border-border flex items-center justify-between">
+                    <Button
+                      variant="secondary"
+                      className="text-xs px-2.5 py-1 gap-1"
+                      onClick={() => setViewingTemplate(t)}
+                    >
+                      <Eye className="w-3.5 h-3.5 text-teal" /> View Fields
+                    </Button>
+
+                    {canManage && (
+                      <div className="space-x-2">
+                        {t.isSystemDefault ? (
+                          <Button
+                            variant="outline"
+                            className="text-xs px-2.5 py-1 gap-1"
+                            onClick={() => handleStartClone(t)}
+                          >
+                            <Copy className="w-3.5 h-3.5 text-brass" /> Clone & Customize
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="primary"
+                            className="text-xs px-2.5 py-1 gap-1"
+                            onClick={() => handleStartEdit(t)}
+                          >
+                            <Edit3 className="w-3.5 h-3.5" /> Edit Template
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* MODAL: Create / Edit Product Type */}
+      {isCreateProductTypeOpen && (
+        <Modal
+          isOpen={isCreateProductTypeOpen}
+          onClose={() => {
+            setIsCreateProductTypeOpen(false);
+            setEditingProductType(null);
+          }}
+          title={editingProductType ? `Edit Product Type: ${editingProductType.name}` : 'Add New Product Type'}
+        >
+          <form onSubmit={handleSaveProductType} className="space-y-4">
+            <Input
+              label="Product Type Name (English)"
+              placeholder="e.g. Waistcoat, Sherwani, Blazer"
+              value={ptName}
+              onChange={(e) => setPtName(e.target.value)}
+              required
+            />
+
+            <Input
+              label="Product Type Name (Nepali / नेपाली)"
+              placeholder="e.g. वेस्टकोट, शेरवानी"
+              value={ptNameNp}
+              onChange={(e) => setPtNameNp(e.target.value)}
+            />
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1 flex items-center justify-between">
+                <span>Default Unit Price (NPR / Rs.)</span>
+                <span className="text-[10px] text-muted normal-case font-normal">(Optional)</span>
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="e.g. 2500.00 (Leave blank if price varies)"
+                value={ptDefaultPrice}
+                onChange={(e) => setPtDefaultPrice(e.target.value)}
+                className="w-full bg-surface border border-border text-ink rounded-md p-2 text-xs focus:outline-none focus:border-teal"
+              />
+              <p className="text-[11px] text-muted mt-1">
+                If provided, this price auto-fills when creating new orders for this product type.
+              </p>
+            </div>
+
+            <div className="pt-2 flex justify-end gap-2">
+              <Button
+                variant="secondary"
+                type="button"
+                onClick={() => {
+                  setIsCreateProductTypeOpen(false);
+                  setEditingProductType(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" isLoading={isPtSubmitting}>
+                {editingProductType ? 'Update Product Type' : 'Create Product Type'}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* MODAL: View Template Fields */}
       {viewingTemplate && (
         <Modal
           isOpen={!!viewingTemplate}
@@ -362,13 +662,13 @@ export const TemplateManagementPage: React.FC = () => {
         </Modal>
       )}
 
-      {/* Modal 2: Clone / Edit / Create Template */}
-      {(editingTemplate || isCreateOpen) && (
+      {/* MODAL: Clone / Edit / Create Template */}
+      {(editingTemplate || isCreateTemplateOpen) && (
         <Modal
-          isOpen={!!editingTemplate || isCreateOpen}
+          isOpen={!!editingTemplate || isCreateTemplateOpen}
           onClose={() => {
             setEditingTemplate(null);
-            setIsCreateOpen(false);
+            setIsCreateTemplateOpen(false);
           }}
           title={
             editingTemplate
@@ -379,25 +679,23 @@ export const TemplateManagementPage: React.FC = () => {
           }
         >
           <form onSubmit={handleSaveTemplate} className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
-            {isCreateOpen && (
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
-                  Garment Type
-                </label>
-                <select
-                  value={formGarmentTypeId}
-                  onChange={(e) => setFormGarmentTypeId(e.target.value)}
-                  className="w-full bg-surface border border-border text-ink rounded-md p-2 text-xs focus:outline-none focus:border-teal"
-                  required
-                >
-                  {garmentTypes.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.name} {g.nameNp ? `(${g.nameNp})` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
+                Mapped Product Type
+              </label>
+              <select
+                value={formGarmentTypeId}
+                onChange={(e) => setFormGarmentTypeId(e.target.value)}
+                className="w-full bg-surface border border-border text-ink rounded-md p-2 text-xs focus:outline-none focus:border-teal"
+                required
+              >
+                {garmentTypes.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name} {g.nameNp ? `(${g.nameNp})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
@@ -489,12 +787,12 @@ export const TemplateManagementPage: React.FC = () => {
                 type="button"
                 onClick={() => {
                   setEditingTemplate(null);
-                  setIsCreateOpen(false);
+                  setIsCreateTemplateOpen(false);
                 }}
               >
                 Cancel
               </Button>
-              <Button type="submit" isLoading={isSubmitting}>
+              <Button type="submit" isLoading={isTemplateSubmitting}>
                 Save Template
               </Button>
             </div>

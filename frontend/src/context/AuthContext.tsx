@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserProfile, AuthResponse } from '../types/auth';
-import { fetchWithAuth } from '../lib/api';
+import { fetchWithAuth, getToken, setTokens, clearTokens } from '../lib/api';
 
 interface AuthContextType {
   user: UserProfile | null;
   isLoading: boolean;
-  login: (authData: AuthResponse) => void;
+  login: (authData: AuthResponse, rememberMe?: boolean) => void;
   logout: () => void;
 }
 
@@ -17,7 +17,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     async function loadUser() {
-      const token = localStorage.getItem('accessToken');
+      const token = getToken();
       if (!token) {
         setIsLoading(false);
         return;
@@ -27,8 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(profile);
       } catch (err) {
         console.error('Failed to restore session:', err);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
+        clearTokens();
       } finally {
         setIsLoading(false);
       }
@@ -36,15 +35,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loadUser();
   }, []);
 
-  const login = (authData: AuthResponse) => {
-    localStorage.setItem('accessToken', authData.accessToken);
-    localStorage.setItem('refreshToken', authData.refreshToken);
+  const login = (authData: AuthResponse, rememberMe: boolean = true) => {
+    setTokens(authData.accessToken, authData.refreshToken, rememberMe);
     setUser(authData.user);
   };
 
   const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    clearTokens();
     setUser(null);
   };
 

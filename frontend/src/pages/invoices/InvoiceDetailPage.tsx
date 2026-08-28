@@ -46,6 +46,13 @@ interface InvoiceDetailRecord {
   dueDate?: string;
   notes?: string;
   createdAt: string;
+  business?: {
+    id: string;
+    name: string;
+    address?: string;
+    phone?: string;
+    panNumber?: string;
+  };
   customer: {
     id: string;
     name: string;
@@ -204,8 +211,8 @@ export const InvoiceDetailPage: React.FC = () => {
       />
 
       {/* Printable Invoice Container */}
-      <Card className="p-8 space-y-6 bg-surface print:shadow-none print:border-none">
-        {/* Invoice Branding Header */}
+      <Card id="printable-invoice" className="p-8 space-y-6 bg-surface print:shadow-none print:border-none">
+        {/* Invoice Branding Header (Seller / Admin Company) */}
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4 border-b border-border pb-6">
           <div className="flex items-start gap-4">
             {invoice.companyLogoUrl ? (
@@ -216,8 +223,9 @@ export const InvoiceDetailPage: React.FC = () => {
               </div>
             )}
             <div>
+              <span className="text-[10px] font-semibold text-teal uppercase tracking-wider block">Seller / Billing HQ:</span>
               <h1 className="text-xl font-bold text-ink tracking-tight">
-                {invoice.companyName || user?.businessName || 'Tailoring Management Platform'}
+                {invoice.companyName || 'Main Admin Company HQ'}
               </h1>
               {invoice.companyAddress && <p className="text-xs text-muted mt-0.5">{invoice.companyAddress}</p>}
               {invoice.companyPhone && <p className="text-xs text-muted">Phone: {invoice.companyPhone}</p>}
@@ -241,15 +249,21 @@ export const InvoiceDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Client & Order Details */}
+        {/* Billed To (Tenant Business & Customer Reference) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
           <div className="p-4 bg-canvas/60 rounded-lg border border-border space-y-1">
-            <span className="text-[10px] font-semibold text-muted uppercase tracking-wider block">Billed To (Client):</span>
+            <span className="text-[10px] font-semibold text-muted uppercase tracking-wider block">Billed To (Client Company):</span>
             <p className="font-bold text-ink text-sm flex items-center gap-1.5">
-              <User className="w-4 h-4 text-teal" /> {invoice.customer?.name}
+              <User className="w-4 h-4 text-teal" /> {invoice.business?.name || user?.businessName || 'Client Business'}
             </p>
-            {invoice.customer?.phone && <p className="text-muted">Phone: {invoice.customer.phone}</p>}
-            {invoice.customer?.address && <p className="text-muted">Address: {invoice.customer.address}</p>}
+            {invoice.business?.address && <p className="text-muted">Address: {invoice.business.address}</p>}
+            {invoice.business?.phone && <p className="text-muted">Phone: {invoice.business.phone}</p>}
+            {invoice.business?.panNumber && <p className="text-muted font-mono">PAN: {invoice.business.panNumber}</p>}
+            
+            <div className="pt-2 mt-2 border-t border-border/60">
+              <span className="text-[10px] font-semibold text-muted uppercase tracking-wider block">Attention / Customer Ref:</span>
+              <p className="font-semibold text-ink">{invoice.customer?.name} {invoice.customer?.phone ? `(${invoice.customer.phone})` : ''}</p>
+            </div>
           </div>
 
           <div className="p-4 bg-canvas/60 rounded-lg border border-border space-y-1">

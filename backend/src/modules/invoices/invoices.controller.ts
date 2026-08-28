@@ -10,12 +10,14 @@ import {
 
 export async function getInvoicesHandler(req: Request, res: Response) {
   try {
-    if (!req.businessId) {
+    const isSuperAdmin = req.user?.roleName === 'Super Admin';
+    if (!req.businessId && !isSuperAdmin) {
       return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Tenant context required' } });
     }
     const search = req.query.search as string | undefined;
     const status = req.query.status as InvoiceStatus | undefined;
-    const invoices = await listInvoices(req.businessId, search, status);
+    const targetBusinessId = (req.query.businessId as string) || req.businessId;
+    const invoices = await listInvoices(targetBusinessId, search, status);
     return res.json(invoices);
   } catch (err: any) {
     const status = err.status || 500;
@@ -27,11 +29,13 @@ export async function getInvoicesHandler(req: Request, res: Response) {
 
 export async function getInvoiceByIdHandler(req: Request, res: Response) {
   try {
-    if (!req.businessId) {
+    const isSuperAdmin = req.user?.roleName === 'Super Admin';
+    if (!req.businessId && !isSuperAdmin) {
       return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Tenant context required' } });
     }
     const { id } = req.params;
-    const invoice = await getInvoiceById(req.businessId, id);
+    const targetBusinessId = (req.query.businessId as string) || req.businessId;
+    const invoice = await getInvoiceById(targetBusinessId, id);
     return res.json(invoice);
   } catch (err: any) {
     const status = err.status || 500;

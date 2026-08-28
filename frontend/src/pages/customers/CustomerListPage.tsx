@@ -6,7 +6,13 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
-import { UserCheck, Plus, Search, Phone, MapPin, ChevronRight, FileText } from 'lucide-react';
+import { Badge } from '../../components/ui/Badge';
+import { UserCheck, Plus, Search, Phone, MapPin, ChevronRight, FileText, Building2 } from 'lucide-react';
+
+interface BusinessTenant {
+  id: string;
+  name: string;
+}
 
 interface CustomerItem {
   id: string;
@@ -15,13 +21,18 @@ interface CustomerItem {
   address?: string;
   notes?: string;
   createdAt: string;
+  business?: BusinessTenant;
 }
 
 export const CustomerListPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isSuperAdmin = user?.role?.name === 'Super Admin';
 
   const [customers, setCustomers] = useState<CustomerItem[]>([]);
+  const [businesses, setBusinesses] = useState<BusinessTenant[]>([]);
+  const [selectedBusinessFilter, setSelectedBusinessFilter] = useState<string>('ALL');
+
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,10 +48,25 @@ export const CustomerListPage: React.FC = () => {
   const perms = user?.role?.permissions || [];
   const canCreate = perms.includes('*') || perms.includes('customer:create') || perms.includes('customer:*');
 
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetchWithAuth<BusinessTenant[]>('/admin/businesses')
+        .then((data) => setBusinesses(data))
+        .catch((err) => console.error('Failed to load businesses list:', err));
+    }
+  }, [isSuperAdmin]);
+
   const loadCustomers = async (searchQuery: string = '') => {
     try {
       setIsLoading(true);
-      const url = searchQuery ? `/customers?search=${encodeURIComponent(searchQuery)}` : '/customers';
+      let url = '/customers';
+      const params: string[] = [];
+      if (searchQuery) params.push(`search=${encodeURIComponent(searchQuery)}`);
+      if (isSuperAdmin && selectedBusinessFilter !== 'ALL') {
+        params.push(`businessId=${selectedBusinessFilter}`);
+      }
+      if (params.length > 0) url += `?${params.join('&')}`;
+
       const data = await fetchWithAuth<CustomerItem[]>(url);
       setCustomers(data);
     } catch (err: any) {
@@ -55,7 +81,7 @@ export const CustomerListPage: React.FC = () => {
       loadCustomers(search);
     }, 300);
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, selectedBusinessFilter]);
 
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,16 +128,36 @@ export const CustomerListPage: React.FC = () => {
         </div>
       )}
 
-      {/* Search Bar */}
-      <div className="relative max-w-md">
-        <Search className="w-4 h-4 text-muted absolute left-3 top-2.5" />
-        <input
-          type="text"
-          placeholder="Search by Name, Phone, or Address (3-field search)..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-surface border border-border text-ink rounded-md pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-teal"
-        />
+      {/* Search & Super Admin Business Filter */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 text-muted absolute left-3 top-2.5" />
+          <input
+            type="text"
+            placeholder="Search by Name, Phone, or Address (3-field search)..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-surface border border-border text-ink rounded-md pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-teal"
+          />
+        </div>
+
+        {isSuperAdmin && (
+          <div className="flex items-center gap-1.5 bg-canvas border border-border rounded-md px-2.5 py-1 text-xs">
+            <Building2 className="w-4 h-4 text-teal" />
+            <select
+              value={selectedBusinessFilter}
+              onChange={(e) => setSelectedBusinessFilter(e.target.value)}
+              className="bg-transparent text-ink font-semibold focus:outline-none text-xs"
+            >
+              <option value="ALL">All Tenant Businesses ({businesses.length})</option>
+              {businesses.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Customer List Grid */}
@@ -136,9 +182,16 @@ export const CustomerListPage: React.FC = () => {
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-base font-semibold text-ink group-hover:text-teal transition-colors">
-                    {c.name}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-semibold text-ink group-hover:text-teal transition-colors">
+                      {c.name}
+                    </h3>
+                    {c.business && (
+                      <Badge variant="teal" className="text-[9px] px-1.5 py-0">
+                        {c.business.name}
+                      </Badge>
+                    )}
+                  </div>
                   <ChevronRight className="w-4 h-4 text-muted group-hover:text-teal transition-colors" />
                 </div>
 

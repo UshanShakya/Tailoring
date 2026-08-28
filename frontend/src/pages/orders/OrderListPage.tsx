@@ -17,6 +17,7 @@ import {
   Calendar,
   Scissors,
   Trash2,
+  Building2,
 } from 'lucide-react';
 
 interface CustomerItem {
@@ -31,10 +32,15 @@ interface GarmentTypeItem {
   nameNp?: string;
 }
 
+interface BusinessTenant {
+  id: string;
+  name: string;
+}
+
 interface OrderItemPayload {
   garmentTypeId: string;
   quantity: number;
-  unitPrice: number;
+  unitPrice?: number | null;
   fabricNotes?: string;
   specialInstructions?: string;
 }
@@ -47,6 +53,7 @@ export interface OrderItem {
   dueDate?: string;
   notes?: string;
   createdAt: string;
+  business?: BusinessTenant;
   customer: CustomerItem;
   items: Array<{
     id: string;
@@ -60,10 +67,13 @@ export interface OrderItem {
 export const OrderListPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isSuperAdmin = user?.role?.name === 'Super Admin';
 
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [customers, setCustomers] = useState<CustomerItem[]>([]);
   const [garmentTypes, setGarmentTypes] = useState<GarmentTypeItem[]>([]);
+  const [businesses, setBusinesses] = useState<BusinessTenant[]>([]);
+  const [selectedBusinessFilter, setSelectedBusinessFilter] = useState<string>('ALL');
 
   const [search, setSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
@@ -81,6 +91,15 @@ export const OrderListPage: React.FC = () => {
   const perms = user?.role?.permissions || [];
   const canCreate = perms.includes('*') || perms.includes('order:create') || perms.includes('order:*');
 
+  // Load businesses for Super Admin
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetchWithAuth<BusinessTenant[]>('/admin/businesses')
+        .then((data) => setBusinesses(data))
+        .catch((err) => console.error('Failed to load businesses list:', err));
+    }
+  }, [isSuperAdmin]);
+
   const loadData = async () => {
     try {
       setIsLoading(true);
@@ -88,6 +107,9 @@ export const OrderListPage: React.FC = () => {
       const params: string[] = [];
       if (search) params.push(`search=${encodeURIComponent(search)}`);
       if (selectedStatus !== 'ALL') params.push(`status=${selectedStatus}`);
+      if (isSuperAdmin && selectedBusinessFilter !== 'ALL') {
+        params.push(`businessId=${selectedBusinessFilter}`);
+      }
       if (params.length > 0) url += `?${params.join('&')}`;
 
       const [ordersData, custData, garmentData] = await Promise.all([
@@ -113,7 +135,7 @@ export const OrderListPage: React.FC = () => {
       loadData();
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, selectedStatus]);
+  }, [search, selectedStatus, selectedBusinessFilter]);
 
   const handleStartCreate = () => {
     if (customers.length > 0) setCustomerId(customers[0].id);
@@ -123,7 +145,7 @@ export const OrderListPage: React.FC = () => {
       {
         garmentTypeId: garmentTypes.length > 0 ? garmentTypes[0].id : '',
         quantity: 1,
-        unitPrice: 50,
+        unitPrice: garmentTypes.length > 0 ? 0 : 0,
         fabricNotes: '',
         specialInstructions: '',
       },
@@ -137,7 +159,7 @@ export const OrderListPage: React.FC = () => {
       {
         garmentTypeId: garmentTypes.length > 0 ? garmentTypes[0].id : '',
         quantity: 1,
-        unitPrice: 50,
+        unitPrice: 0,
         fabricNotes: '',
         specialInstructions: '',
       },
@@ -229,7 +251,7 @@ export const OrderListPage: React.FC = () => {
         </div>
       )}
 
-      {/* Filter Tabs & Search */}
+      {/* Filter Tabs & Search & Super Admin Business Selector */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-1 border-b md:border-b-0 border-border overflow-x-auto pb-2 md:pb-0 text-xs font-medium">
           {['ALL', 'DRAFT', 'CONFIRMED', 'IN_PROGRESS', 'READY', 'DELIVERED', 'CANCELLED'].map((st) => (
@@ -247,15 +269,35 @@ export const OrderListPage: React.FC = () => {
           ))}
         </div>
 
-        <div className="relative w-full md:w-64 shrink-0">
-          <Search className="w-4 h-4 text-muted absolute left-3 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search order # or customer..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-surface border border-border text-ink rounded-md pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-teal"
-          />
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          {isSuperAdmin && (
+            <div className="flex items-center gap-1.5 bg-canvas border border-border rounded-md px-2.5 py-1 text-xs">
+              <Building2 className="w-4 h-4 text-teal" />
+              <select
+                value={selectedBusinessFilter}
+                onChange={(e) => setSelectedBusinessFilter(e.target.value)}
+                className="bg-transparent text-ink font-semibold focus:outline-none text-xs"
+              >
+                <option value="ALL">All Tenant Businesses ({businesses.length})</option>
+                {businesses.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="relative w-full md:w-64 shrink-0">
+            <Search className="w-4 h-4 text-muted absolute left-3 top-2.5" />
+            <input
+              type="text"
+              placeholder="Search order # or customer..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-surface border border-border text-ink rounded-md pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-teal"
+            />
+          </div>
         </div>
       </div>
 
@@ -282,7 +324,14 @@ export const OrderListPage: React.FC = () => {
               <div>
                 <div className="flex items-start justify-between gap-2 border-b border-border pb-2.5 mb-3">
                   <div>
-                    <span className="font-mono text-xs font-bold text-teal">{o.orderNumber}</span>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="font-mono text-xs font-bold text-teal">{o.orderNumber}</span>
+                      {o.business && (
+                        <Badge variant="teal" className="text-[9px] px-1.5 py-0">
+                          {o.business.name}
+                        </Badge>
+                      )}
+                    </div>
                     <h3 className="text-sm font-semibold text-ink flex items-center gap-1.5 mt-0.5 group-hover:text-teal transition-colors">
                       <User className="w-3.5 h-3.5 text-muted" /> {o.customer?.name}
                     </h3>
@@ -428,15 +477,15 @@ export const OrderListPage: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="text-[10px] text-muted font-medium">Unit Price ($)</label>
+                      <label className="text-[10px] text-muted font-medium">Unit Price (NPR)</label>
                       <input
                         type="number"
                         min="0"
                         step="0.01"
-                        value={item.unitPrice}
-                        onChange={(e) => handleItemChange(idx, 'unitPrice', Number(e.target.value))}
+                        value={item.unitPrice || ''}
+                        onChange={(e) => handleItemChange(idx, 'unitPrice', e.target.value !== '' ? Number(e.target.value) : undefined)}
+                        placeholder="Auto-filled from Product Type"
                         className="w-full bg-surface border border-border text-ink rounded px-2 py-1 text-xs focus:outline-none focus:border-teal"
-                        required
                       />
                     </div>
                   </div>

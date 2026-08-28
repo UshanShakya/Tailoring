@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { fetchWithAuth } from '../../lib/api';
 import { formatCurrency } from '../../lib/currency';
 import { Card } from '../../components/ui/Card';
@@ -9,7 +10,13 @@ import {
   Search,
   ChevronRight,
   User,
+  Building2,
 } from 'lucide-react';
+
+interface BusinessTenant {
+  id: string;
+  name: string;
+}
 
 interface InvoiceListItem {
   id: string;
@@ -20,6 +27,7 @@ interface InvoiceListItem {
   dueAmount: number;
   dueDate?: string;
   createdAt: string;
+  business?: BusinessTenant;
   customer: {
     id: string;
     name: string;
@@ -33,12 +41,25 @@ interface InvoiceListItem {
 
 export const InvoiceListPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role?.name === 'Super Admin';
 
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
+  const [businesses, setBusinesses] = useState<BusinessTenant[]>([]);
+  const [selectedBusinessFilter, setSelectedBusinessFilter] = useState<string>('ALL');
+
   const [search, setSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetchWithAuth<BusinessTenant[]>('/admin/businesses')
+        .then((data) => setBusinesses(data))
+        .catch((err) => console.error('Failed to load businesses list:', err));
+    }
+  }, [isSuperAdmin]);
 
   const loadInvoices = async () => {
     try {
@@ -47,6 +68,9 @@ export const InvoiceListPage: React.FC = () => {
       const params: string[] = [];
       if (search) params.push(`search=${encodeURIComponent(search)}`);
       if (selectedStatus !== 'ALL') params.push(`status=${selectedStatus}`);
+      if (isSuperAdmin && selectedBusinessFilter !== 'ALL') {
+        params.push(`businessId=${selectedBusinessFilter}`);
+      }
       if (params.length > 0) url += `?${params.join('&')}`;
 
       const data = await fetchWithAuth<InvoiceListItem[]>(url);
@@ -63,7 +87,7 @@ export const InvoiceListPage: React.FC = () => {
       loadInvoices();
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, selectedStatus]);
+  }, [search, selectedStatus, selectedBusinessFilter]);
 
   const getStatusBadge = (status: InvoiceListItem['status']) => {
     switch (status) {
@@ -98,7 +122,7 @@ export const InvoiceListPage: React.FC = () => {
         </div>
       )}
 
-      {/* Filter Tabs & Search */}
+      {/* Filter Tabs & Search & Super Admin Business Selector */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-1 border-b md:border-b-0 border-border overflow-x-auto pb-2 md:pb-0 text-xs font-medium">
           {['ALL', 'UNPAID', 'PARTIALLY_PAID', 'PAID', 'CANCELLED'].map((st) => (
@@ -116,15 +140,35 @@ export const InvoiceListPage: React.FC = () => {
           ))}
         </div>
 
-        <div className="relative w-full md:w-64 shrink-0">
-          <Search className="w-4 h-4 text-muted absolute left-3 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search invoice #, order #, customer..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-surface border border-border text-ink rounded-md pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-teal"
-          />
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          {isSuperAdmin && (
+            <div className="flex items-center gap-1.5 bg-canvas border border-border rounded-md px-2.5 py-1 text-xs">
+              <Building2 className="w-4 h-4 text-teal" />
+              <select
+                value={selectedBusinessFilter}
+                onChange={(e) => setSelectedBusinessFilter(e.target.value)}
+                className="bg-transparent text-ink font-semibold focus:outline-none text-xs"
+              >
+                <option value="ALL">All Tenant Businesses ({businesses.length})</option>
+                {businesses.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="relative w-full md:w-64 shrink-0">
+            <Search className="w-4 h-4 text-muted absolute left-3 top-2.5" />
+            <input
+              type="text"
+              placeholder="Search invoice #, order #, customer..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-surface border border-border text-ink rounded-md pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-teal"
+            />
+          </div>
         </div>
       </div>
 
@@ -147,7 +191,14 @@ export const InvoiceListPage: React.FC = () => {
               <div>
                 <div className="flex items-start justify-between gap-2 border-b border-border pb-2.5 mb-3">
                   <div>
-                    <span className="font-mono text-xs font-bold text-teal">{inv.invoiceNumber}</span>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="font-mono text-xs font-bold text-teal">{inv.invoiceNumber}</span>
+                      {inv.business && (
+                        <Badge variant="teal" className="text-[9px] px-1.5 py-0">
+                          {inv.business.name}
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-[11px] text-muted font-mono">Ref Order: {inv.order?.orderNumber}</p>
                   </div>
                   {getStatusBadge(inv.status)}

@@ -15,9 +15,15 @@ export const updateCustomerSchema = z.object({
   notes: z.string().optional(),
 });
 
-// List customers for caller's business with 3-field search filter (Name, Phone, Address)
-export async function listCustomers(businessId: string, search?: string) {
+import prisma from '../../lib/prisma';
+
+// List customers for caller's business with 3-field search filter (Name, Phone, Address), supports Super Admin global view
+export async function listCustomers(businessId?: string, search?: string) {
   const where: any = {};
+  if (businessId) {
+    where.businessId = businessId;
+  }
+
   if (search && search.trim() !== '') {
     const query = search.trim();
     where.OR = [
@@ -27,8 +33,11 @@ export async function listCustomers(businessId: string, search?: string) {
     ];
   }
 
-  return forBusiness(businessId).customer.findMany({
+  return prisma.customer.findMany({
     where,
+    include: {
+      business: true,
+    },
     orderBy: { createdAt: 'desc' },
   });
 }

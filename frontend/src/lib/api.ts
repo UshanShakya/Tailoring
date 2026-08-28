@@ -1,10 +1,42 @@
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
+export function getToken(): string | null {
+  return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+}
+
+export function getRefreshToken(): string | null {
+  return localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
+}
+
+export function setTokens(accessToken: string, refreshToken: string, rememberMe: boolean = true) {
+  if (rememberMe) {
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    localStorage.setItem('rememberMe', 'true');
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('refreshToken');
+  } else {
+    sessionStorage.setItem('accessToken', accessToken);
+    sessionStorage.setItem('refreshToken', refreshToken);
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('rememberMe');
+  }
+}
+
+export function clearTokens() {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('rememberMe');
+  sessionStorage.removeItem('accessToken');
+  sessionStorage.removeItem('refreshToken');
+}
 
 export async function fetchWithAuth<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = localStorage.getItem('accessToken');
+  const token = getToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
@@ -21,7 +53,7 @@ export async function fetchWithAuth<T>(
 
   // Handle Token Expiration and Refresh
   if (response.status === 401 && !endpoint.startsWith('/auth/')) {
-    const refreshToken = localStorage.getItem('refreshToken');
+    const refreshToken = getRefreshToken();
     if (refreshToken) {
       const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
         method: 'POST',
@@ -31,8 +63,8 @@ export async function fetchWithAuth<T>(
 
       if (refreshResponse.ok) {
         const refreshData = await refreshResponse.json();
-        localStorage.setItem('accessToken', refreshData.accessToken);
-        localStorage.setItem('refreshToken', refreshData.refreshToken);
+        const isRemembered = localStorage.getItem('rememberMe') === 'true';
+        setTokens(refreshData.accessToken, refreshData.refreshToken, isRemembered);
 
         // Retry original request with new token
         headers['Authorization'] = `Bearer ${refreshData.accessToken}`;
@@ -41,8 +73,7 @@ export async function fetchWithAuth<T>(
           headers,
         });
       } else {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
+        clearTokens();
         window.location.href = '/login';
         throw new Error('Session expired. Please log in again.');
       }

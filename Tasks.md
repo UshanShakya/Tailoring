@@ -297,3 +297,30 @@ Milestone done when: the application has a consistent global navigation experien
       - [x] Invoice remains unchanged after product price changes
 
 **Milestone done when:** a Business Admin can configure their company's billing information and logo, orders can be created even when a price has not yet been determined, configured prices are automatically used when available, invoices preserve their final billing values, payments correctly update outstanding balances, and the resulting invoice contains the information required for the business's applicable Nepalese billing/tax requirements.
+
+
+### Milestone 11 — Product Type Setup
+
+- [x] There should be a product type setup
+      - [x] Setup for like Shirt, Pant, etc, new product type
+      - [x] Template will be mapped as per the product type.
+      
+**Milestone done when:** An admin can create a new product type,business admins can create their own template for the product type.
+
+
+### Milestone 12 - Issue Fixes
+- [x] The company details used in invoice should only be of our company the one that is managed by super admin, it should not be of the business admin. It could be of the business only for sub heading, like to which party but from should always be our admin company. 
+- [x] The area of print is still not ok.
+- [x] Admin cannot view all the orders, the orders should be seperated business wise , eveything should be seperated business wise in the UI for admin.
+- [x] I still cannot see the Product Type crud operation page from the super admih, this should only be available for the super admin.
+
+**Milestone done when:** Main admin company pan and details is being used. Print area only print a selected div. admin should be able to view orders seperately for businesses, product type crud with template management should be seen. 
+ 
+
+### Milestone 13 - Remember Me in the Login UI
+- [x] Add a remember me so that the login wont go away for some time. 
+- [x] Remove the fill super admin details button and ui.
+
+**Milestone done when:** Login when browser is closed if logged in when closing browser.
+ 
+ 
