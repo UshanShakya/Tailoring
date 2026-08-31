@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import { Badge } from '../../components/ui/Badge';
+import { Select2Combobox } from '../../components/ui/Select2Combobox';
 import { Building2, UserPlus, Plus, ShieldCheck, CheckCircle2, XCircle } from 'lucide-react';
 
 interface BusinessItem {
@@ -251,22 +252,18 @@ export const SuperAdminDashboard: React.FC = () => {
       >
         <form onSubmit={handleCreateAdmin} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
-              Target Business
-            </label>
-            <select
-              value={selectedBusinessId}
-              onChange={(e) => setSelectedBusinessId(e.target.value)}
-              className="w-full bg-surface border border-border text-ink rounded-md px-3 py-2 text-sm focus:outline-none focus:border-teal"
+            <Select2Combobox
+              label="Target Business"
               required
-            >
-              <option value="">Select a business...</option>
-              {businesses.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
+              placeholder="Select a business..."
+              value={selectedBusinessId}
+              onChange={(val) => setSelectedBusinessId(val)}
+              options={businesses.map((b) => ({
+                value: b.id,
+                label: b.name,
+              }))}
+              clearable={false}
+            />
           </div>
 
           <Input

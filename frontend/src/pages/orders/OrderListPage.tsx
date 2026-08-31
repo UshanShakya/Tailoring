@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { Badge } from '../../components/ui/Badge';
 import { CustomerSearchSelect } from '../../components/ui/CustomerSearchSelect';
+import { Select2Combobox } from '../../components/ui/Select2Combobox';
 import {
   ShoppingBag,
   Plus,
@@ -271,20 +272,22 @@ export const OrderListPage: React.FC = () => {
 
         <div className="flex items-center gap-2 w-full md:w-auto">
           {isSuperAdmin && (
-            <div className="flex items-center gap-1.5 bg-canvas border border-border rounded-md px-2.5 py-1 text-xs">
-              <Building2 className="w-4 h-4 text-teal" />
-              <select
-                value={selectedBusinessFilter}
-                onChange={(e) => setSelectedBusinessFilter(e.target.value)}
-                className="bg-transparent text-ink font-semibold focus:outline-none text-xs"
-              >
-                <option value="ALL">All Tenant Businesses ({businesses.length})</option>
-                {businesses.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
+            <div className="flex items-center gap-1.5 min-w-[220px]">
+              <Building2 className="w-4 h-4 text-teal shrink-0" />
+              <div className="w-full">
+                <Select2Combobox
+                  value={selectedBusinessFilter}
+                  onChange={(val) => setSelectedBusinessFilter(val)}
+                  options={[
+                    { value: 'ALL', label: `All Tenant Businesses (${businesses.length})` },
+                    ...businesses.map((b) => ({
+                      value: b.id,
+                      label: b.name,
+                    })),
+                  ]}
+                  clearable={false}
+                />
+              </div>
             </div>
           )}
 
@@ -450,18 +453,16 @@ export const OrderListPage: React.FC = () => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <div>
-                      <label className="text-[10px] text-muted font-medium">Garment Type</label>
-                      <select
+                      <Select2Combobox
+                        label="Garment Type"
                         value={item.garmentTypeId}
-                        onChange={(e) => handleItemChange(idx, 'garmentTypeId', e.target.value)}
-                        className="w-full bg-surface border border-border text-ink rounded px-2 py-1 text-xs focus:outline-none focus:border-teal"
-                      >
-                        {garmentTypes.map((g) => (
-                          <option key={g.id} value={g.id}>
-                            {g.name} {g.nameNp ? `(${g.nameNp})` : ''}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => handleItemChange(idx, 'garmentTypeId', val)}
+                        options={garmentTypes.map((g) => ({
+                          value: g.id,
+                          label: `${g.name}${g.nameNp ? ` (${g.nameNp})` : ''}`,
+                        }))}
+                        clearable={false}
+                      />
                     </div>
 
                     <div>

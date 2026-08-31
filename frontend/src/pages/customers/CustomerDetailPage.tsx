@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Badge } from '../../components/ui/Badge';
+import { Select2Combobox } from '../../components/ui/Select2Combobox';
 import {
   User,
   Phone,
@@ -433,21 +434,17 @@ export const CustomerDetailPage: React.FC = () => {
       >
         <form onSubmit={handleSaveMeasurement} className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
-              Select Garment Measurement Template
-            </label>
-            <select
-              value={selectedTemplateId}
-              onChange={(e) => handleTemplateSelectChange(e.target.value)}
-              className="w-full bg-surface border border-border text-ink rounded-md p-2.5 text-xs focus:outline-none focus:border-teal"
+            <Select2Combobox
+              label="Select Garment Measurement Template"
               required
-            >
-              {availableTemplates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.garmentType?.name} — {t.name} {t.nameNp ? `(${t.nameNp})` : ''}
-                </option>
-              ))}
-            </select>
+              value={selectedTemplateId}
+              onChange={(val) => handleTemplateSelectChange(val)}
+              options={availableTemplates.map((t) => ({
+                value: t.id,
+                label: `${t.garmentType?.name} — ${t.name}${t.nameNp ? ` (${t.nameNp})` : ''}`,
+              }))}
+              clearable={false}
+            />
           </div>
 
           {currentTemplate && (

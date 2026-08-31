@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import { Badge } from '../../components/ui/Badge';
+import { Select2Combobox } from '../../components/ui/Select2Combobox';
 import {
   Ruler,
   Copy,
@@ -435,19 +436,21 @@ export const TemplateManagementPage: React.FC = () => {
           <div className="flex items-center justify-between bg-canvas p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 text-xs">
               <Filter className="w-4 h-4 text-teal" />
-              <span className="font-semibold text-ink">Filter by Product Type:</span>
-              <select
-                value={selectedProductTypeFilter}
-                onChange={(e) => setSelectedProductTypeFilter(e.target.value)}
-                className="bg-surface border border-border text-ink rounded px-2 py-1 text-xs focus:outline-none focus:border-teal"
-              >
-                <option value="ALL">All Product Types ({templates.length})</option>
-                {garmentTypes.map((gt) => (
-                  <option key={gt.id} value={gt.id}>
-                    {gt.name} {gt.nameNp ? `(${gt.nameNp})` : ''}
-                  </option>
-                ))}
-              </select>
+              <span className="font-semibold text-ink shrink-0">Filter by Product Type:</span>
+              <div className="w-64">
+                <Select2Combobox
+                  value={selectedProductTypeFilter}
+                  onChange={(val) => setSelectedProductTypeFilter(val)}
+                  options={[
+                    { value: 'ALL', label: `All Product Types (${templates.length})` },
+                    ...garmentTypes.map((gt) => ({
+                      value: gt.id,
+                      label: `${gt.name}${gt.nameNp ? ` (${gt.nameNp})` : ''}`,
+                    })),
+                  ]}
+                  clearable={false}
+                />
+              </div>
             </div>
           </div>
 
@@ -680,21 +683,17 @@ export const TemplateManagementPage: React.FC = () => {
         >
           <form onSubmit={handleSaveTemplate} className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
-                Mapped Product Type
-              </label>
-              <select
-                value={formGarmentTypeId}
-                onChange={(e) => setFormGarmentTypeId(e.target.value)}
-                className="w-full bg-surface border border-border text-ink rounded-md p-2 text-xs focus:outline-none focus:border-teal"
+              <Select2Combobox
+                label="Mapped Product Type"
                 required
-              >
-                {garmentTypes.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name} {g.nameNp ? `(${g.nameNp})` : ''}
-                  </option>
-                ))}
-              </select>
+                value={formGarmentTypeId}
+                onChange={(val) => setFormGarmentTypeId(val)}
+                options={garmentTypes.map((g) => ({
+                  value: g.id,
+                  label: `${g.name}${g.nameNp ? ` (${g.nameNp})` : ''}`,
+                }))}
+                clearable={false}
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -765,15 +764,16 @@ export const TemplateManagementPage: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="text-[10px] text-muted font-medium">Unit</label>
-                        <select
+                        <Select2Combobox
+                          label="Unit"
                           value={field.unit}
-                          onChange={(e) => handleFieldChange(idx, 'unit', e.target.value)}
-                          className="w-full bg-surface border border-border rounded px-2 py-1 text-xs focus:outline-none focus:border-teal"
-                        >
-                          <option value="in">Inches (in)</option>
-                          <option value="cm">Centimeters (cm)</option>
-                        </select>
+                          onChange={(val) => handleFieldChange(idx, 'unit', val)}
+                          options={[
+                            { value: 'in', label: 'Inches (in)' },
+                            { value: 'cm', label: 'Centimeters (cm)' },
+                          ]}
+                          clearable={false}
+                        />
                       </div>
                     </div>
                   </div>

@@ -26,6 +26,7 @@
 | 11. Product Type Setup | Done | Product Types management setup UI, default unit price configuration, bilingual naming (English & Nepali), measurement template mapping filter, and automated test suite. |
 | 12. Issue Fixes | Done | Main Admin Company invoice seller snapshotting & B2B layout, isolated #printable-invoice print CSS, Super Admin business-wise filtering for orders/invoices/customers, and Super Admin Product Type CRUD authorization. |
 | 13. Remember Me in Login UI | Done | Remember Me checkbox session persistence across browser restarts (localStorage vs sessionStorage), token storage utility helpers, and removed development quick-fill UI. |
+| 14. Select2 Combobox UI Standardization | Done | Standardized all select inputs and filter dropdowns across Super Admin, Customer detail/list, Invoice list, Order list, and Template management using the unified, searchable, light/dark mode ready `Select2Combobox` component with 0 native HTML `<select>` elements remaining. |
 
 _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 
@@ -65,12 +66,13 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 - [x] Prisma model: `AuditLog` & automated audit logger helper (`logAuditEvent`) (2026-08-27)
 - [x] Backend endpoint `GET /dashboard/stats` (2026-08-27)
 - [x] Frontend: Upgraded Overview Dashboard (`OverviewPage.tsx`) with active metrics, revenue totals, outstanding balance due, quick action shortcuts, and live Audit Trail Activity feed (2026-08-27)
-- [x] Milestone 9: Currency standardization to Nepalese Rupees (`Rs. 1,750.00`), Light/Dark theme system with TopBar toggle, tenant- & permission-scoped Global Search API & popup combobox, reusable BackButton & PageHeader, local Select2 combobox with async API search, and invoice print styles (2026-08-27)
+- [x] Milestone 9: Currency standardization to Nepalese Rupees (`Rs. 1,750.00`), Light/Dark theme system with TopBar toggle, tenant- & permission-scoped Global Search API & combobox, reusable BackButton & PageHeader, local Select2 combobox with async API search, and invoice print styles (2026-08-27)
 - [x] Role Groups & User Group Assignment: `RoleGroup` & `RoleGroupMapping` database models, permission aggregation engine, `/role-groups` API module, Role Group management page (`RoleGroupManagementPage.tsx`), and staff user group assignment (2026-08-27)
 - [x] Milestone 10: Company Setup, Pricing & Nepal Billing — Company settings API, Cloudinary logo upload, optional garment default pricing, permanent invoice price snapshotting, Nepalese A4 billing print receipt, and 5 automated billing unit tests (2026-08-27)
 - [x] Milestone 11: Product Type Setup — Product Types setup UI tab, default unit price manager, bilingual naming (English & Nepali), measurement template mapping filter, and 4 automated test cases (2026-08-28)
 - [x] Milestone 12: Issue Fixes — Main Admin Company invoice seller snapshotting & B2B layout, isolated #printable-invoice print CSS, Super Admin business-wise filtering for orders/invoices/customers, Super Admin Product Type CRUD authorization, and 3 automated test cases (2026-08-28)
 - [x] Milestone 13: Remember Me in Login UI — Remember Me checkbox session persistence across browser restarts, token storage helpers (localStorage vs sessionStorage), and removed development quick-fill UI (2026-08-28)
+- [x] Milestone 14: Select2 Combobox UI Standardization — Complete replacement of all native `<select>` controls across Super Admin, Customer detail/list, Invoice list, Order list, and Template management using `Select2Combobox` (2026-08-31)
 
 ## In Progress
 
@@ -100,3 +102,4 @@ _Status values: `Not Started` / `In Progress` / `Blocked` / `Done`_
 | 2026-08-27 | Added 3-field text search for Customers (Name, Phone, Address) & native Select2 combobox component (`CustomerSearchSelect.tsx`). |
 | 2026-08-27 | Built Milestone 8 (Dashboards, Audit Log, Polish). Created AuditLog database model, automated audit logger, backend dashboard stats API, and live executive command center dashboard with real-time metrics and audit trail activity feed. |
 | 2026-08-27 | Built Milestone 9 (Global UX & Application Quality of Life). Implemented Nepalese Rupee currency formatting (`Rs. 1,750.00`), Light/Dark theme system with TopBar toggle, permission-scoped Global Search API, reusable BackButton & PageHeader, local Select2 combobox with async API search, and invoice print styles. |
+| 2026-08-31 | Built Milestone 14 (Select2 Combobox UI Standardization). Replaced all native `<select>` dropdowns across Super Admin, Customers, Invoices, Orders, and Template management with `Select2Combobox`. |

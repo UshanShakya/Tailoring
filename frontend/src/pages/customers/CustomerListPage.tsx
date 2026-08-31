@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import { Badge } from '../../components/ui/Badge';
+import { Select2Combobox } from '../../components/ui/Select2Combobox';
 import { UserCheck, Plus, Search, Phone, MapPin, ChevronRight, FileText, Building2 } from 'lucide-react';
 
 interface BusinessTenant {
@@ -142,20 +143,22 @@ export const CustomerListPage: React.FC = () => {
         </div>
 
         {isSuperAdmin && (
-          <div className="flex items-center gap-1.5 bg-canvas border border-border rounded-md px-2.5 py-1 text-xs">
-            <Building2 className="w-4 h-4 text-teal" />
-            <select
-              value={selectedBusinessFilter}
-              onChange={(e) => setSelectedBusinessFilter(e.target.value)}
-              className="bg-transparent text-ink font-semibold focus:outline-none text-xs"
-            >
-              <option value="ALL">All Tenant Businesses ({businesses.length})</option>
-              {businesses.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
+          <div className="flex items-center gap-1.5 min-w-[220px]">
+            <Building2 className="w-4 h-4 text-teal shrink-0" />
+            <div className="w-full">
+              <Select2Combobox
+                value={selectedBusinessFilter}
+                onChange={(val) => setSelectedBusinessFilter(val)}
+                options={[
+                  { value: 'ALL', label: `All Tenant Businesses (${businesses.length})` },
+                  ...businesses.map((b) => ({
+                    value: b.id,
+                    label: b.name,
+                  })),
+                ]}
+                clearable={false}
+              />
+            </div>
           </div>
         )}
       </div>
