@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchWithAuth } from '../../lib/api';
+import { useAuth } from '../../context/AuthContext';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -27,6 +28,9 @@ interface StaffUser {
 }
 
 export const StaffManagementPage: React.FC = () => {
+  const { user: currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.role?.name === 'Super Admin';
+
   const [staffList, setStaffList] = useState<StaffUser[]>([]);
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
   const [availableRoleGroups, setAvailableRoleGroups] = useState<RoleGroup[]>([]);
@@ -43,6 +47,10 @@ export const StaffManagementPage: React.FC = () => {
   const [roleGroupId, setRoleGroupId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const assignableRoles = isSuperAdmin
+    ? availableRoles
+    : availableRoles.filter((r) => r.name !== 'Business Admin' && r.name !== 'Super Admin');
+
   const loadData = async () => {
     try {
       setIsLoading(true);
@@ -54,8 +62,11 @@ export const StaffManagementPage: React.FC = () => {
       setStaffList(usersData);
       setAvailableRoles(rolesData);
       setAvailableRoleGroups(groupsData);
-      if (rolesData.length > 0 && !roleId) {
-        setRoleId(rolesData[0].id);
+      const validRoles = isSuperAdmin
+        ? rolesData
+        : rolesData.filter((r) => r.name !== 'Business Admin' && r.name !== 'Super Admin');
+      if (validRoles.length > 0 && !roleId) {
+        setRoleId(validRoles[0].id);
       }
     } catch (err: any) {
       setError(err.message || 'Failed to load staff list');
@@ -73,7 +84,7 @@ export const StaffManagementPage: React.FC = () => {
     setName('');
     setEmail('');
     setPassword('');
-    if (availableRoles.length > 0) setRoleId(availableRoles[0].id);
+    if (assignableRoles.length > 0) setRoleId(assignableRoles[0].id);
     setRoleGroupId('');
     setIsAddStaffOpen(true);
   };
@@ -138,7 +149,7 @@ export const StaffManagementPage: React.FC = () => {
     }
   };
 
-  const roleOptions = availableRoles.map((r) => ({
+  const roleOptions = assignableRoles.map((r) => ({
     value: r.id,
     label: r.name,
     sublabel: r.isSystem ? 'System Default Role' : 'Custom Tenant Role',
@@ -199,60 +210,72 @@ export const StaffManagementPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border text-ink">
-                {staffList.map((member) => (
-                  <tr key={member.id} className="hover:bg-canvas/50 transition-colors">
-                    <td className="px-4 py-3 font-semibold">{member.name}</td>
-                    <td className="px-4 py-3 text-muted">{member.email}</td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        variant={
-                          member.role?.name === 'Business Admin'
-                            ? 'brass'
-                            : member.role?.name === 'Super Admin'
-                            ? 'error'
-                            : 'teal'
-                        }
-                      >
-                        {member.role?.name || 'Standard Staff'}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      {member.roleGroup ? (
-                        <Badge variant="teal">{member.roleGroup.name}</Badge>
-                      ) : (
-                        <span className="text-muted italic text-[11px]">No group assigned</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant={member.isActive ? 'success' : 'error'}>
-                        {member.isActive ? 'Active' : 'Inactive'}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-right space-x-2">
-                      <Button
-                        variant="secondary"
-                        className="text-xs px-2.5 py-1 gap-1"
-                        onClick={() => handleOpenEdit(member)}
-                      >
-                        <Edit3 className="w-3.5 h-3.5" /> Edit
-                      </Button>
+                {staffList.map((member) => {
+                  const isAdminMember =
+                    member.role?.name === 'Business Admin' || member.role?.name === 'Super Admin';
+                  const canEditMember = isSuperAdmin || !isAdminMember;
 
-                      {member.role?.name !== 'Business Admin' && member.role?.name !== 'Super Admin' && (
-                        <Button
-                          variant="outline"
-                          className="text-xs px-2.5 py-1"
-                          onClick={() => handleToggleStaffStatus(member)}
+                  return (
+                    <tr key={member.id} className="hover:bg-canvas/50 transition-colors">
+                      <td className="px-4 py-3 font-semibold">{member.name}</td>
+                      <td className="px-4 py-3 text-muted">{member.email}</td>
+                      <td className="px-4 py-3">
+                        <Badge
+                          variant={
+                            member.role?.name === 'Business Admin'
+                              ? 'brass'
+                              : member.role?.name === 'Super Admin'
+                              ? 'error'
+                              : 'teal'
+                          }
                         >
-                          {member.isActive ? (
-                            <span className="text-error flex items-center gap-1"><XCircle className="w-3 h-3"/> Deactivate</span>
-                          ) : (
-                            <span className="text-success flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> Activate</span>
-                          )}
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                          {member.role?.name || 'Standard Staff'}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        {member.roleGroup ? (
+                          <Badge variant="teal">{member.roleGroup.name}</Badge>
+                        ) : (
+                          <span className="text-muted italic text-[11px]">No group assigned</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant={member.isActive ? 'success' : 'error'}>
+                          {member.isActive ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-right space-x-2">
+                        {canEditMember ? (
+                          <Button
+                            variant="secondary"
+                            className="text-xs px-2.5 py-1 gap-1"
+                            onClick={() => handleOpenEdit(member)}
+                          >
+                            <Edit3 className="w-3.5 h-3.5" /> Edit Role
+                          </Button>
+                        ) : (
+                          <span className="text-[11px] text-muted font-medium italic px-2 py-1 bg-canvas border border-border rounded">
+                            Admin Account
+                          </span>
+                        )}
+
+                        {canEditMember && (
+                          <Button
+                            variant="outline"
+                            className="text-xs px-2.5 py-1"
+                            onClick={() => handleToggleStaffStatus(member)}
+                          >
+                            {member.isActive ? (
+                              <span className="text-error flex items-center gap-1"><XCircle className="w-3 h-3"/> Deactivate</span>
+                            ) : (
+                              <span className="text-success flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> Activate</span>
+                            )}
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

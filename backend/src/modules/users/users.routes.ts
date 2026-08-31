@@ -15,6 +15,7 @@ export const adminUsersRouter = Router();
 adminUsersRouter.use(authenticate, authorize('*'));
 adminUsersRouter.get('/', getAllUsersHandler);
 adminUsersRouter.post('/', createBusinessAdminHandler);
+adminUsersRouter.patch('/:id', updateUserHandler);
 
 // 2. Business Tenant Router (/users)
 export const tenantUsersRouter = Router();

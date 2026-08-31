@@ -325,7 +325,7 @@ Milestone done when: the application has a consistent global navigation experien
  
 
 ### Milestone 14 - Be able to change the user roles,
-- [] As admin and business admin, i am not able to update or assign roles to user, change roles basically . the super amdin should be able to assign roles to any user of any company whereas the business admin should be able to assign roles to user of that company except for business admins.
+- [x] As admin and business admin, i am not able to update or assign roles to user, change roles basically . the super amdin should be able to assign roles to any user of any company whereas the business admin should be able to assign roles to user of that company except for business admins.
 
 **Milestone done when:**  the super amdin should be able to assign roles to any user of any company whereas the business admin should be able to assign roles to user of that company except for business admins.
  

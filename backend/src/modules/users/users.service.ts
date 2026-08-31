@@ -156,16 +156,45 @@ export async function createStaffUser(businessId: string, input: z.infer<typeof 
   });
 }
 
-// Business Admin / Super Admin: Update user status/details
-export async function updateUser(id: string, businessId: string | null, input: z.infer<typeof updateUserSchema>) {
-  const user = await prisma.user.findUnique({ where: { id } });
+// Business Admin / Super Admin: Update user status/details/roles
+export async function updateUser(
+  id: string,
+  businessId: string | null,
+  callerRoleName: string | undefined,
+  input: z.infer<typeof updateUserSchema>
+) {
+  const user = await prisma.user.findUnique({
+    where: { id },
+    include: { role: true },
+  });
+
   if (!user) {
     throw { status: 404, code: 'NOT_FOUND', message: 'User not found' };
   }
 
-  // Tenant Isolation Check
-  if (businessId && user.businessId !== businessId) {
-    throw { status: 403, code: 'FORBIDDEN', message: 'Cannot edit user from another business tenant' };
+  const isSuperAdmin = callerRoleName === 'Super Admin';
+
+  if (!isSuperAdmin) {
+    // 1. Tenant Isolation Check
+    if (businessId && user.businessId !== businessId) {
+      throw { status: 403, code: 'FORBIDDEN', message: 'Cannot edit user from another business tenant' };
+    }
+
+    // 2. Business Admins cannot modify Business Admin or Super Admin user accounts
+    if (user.role?.name === 'Business Admin' || user.role?.name === 'Super Admin') {
+      throw { status: 403, code: 'FORBIDDEN', message: 'Business Admins cannot modify Business Admin or Super Admin user accounts' };
+    }
+
+    // 3. If updating roleId, verify target role is NOT Business Admin or Super Admin
+    if (input.roleId) {
+      const targetRole = await prisma.role.findUnique({ where: { id: input.roleId } });
+      if (!targetRole) {
+        throw { status: 404, code: 'NOT_FOUND', message: 'Selected target role not found' };
+      }
+      if (targetRole.name === 'Business Admin' || targetRole.name === 'Super Admin') {
+        throw { status: 403, code: 'FORBIDDEN', message: 'Business Admins cannot assign Business Admin or Super Admin roles' };
+      }
+    }
   }
 
   return prisma.user.update({

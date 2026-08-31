@@ -84,8 +84,9 @@ export async function updateUserHandler(req: Request, res: Response) {
   try {
     const { id } = req.params;
     const validated = updateUserSchema.parse(req.body);
+    const callerRoleName = req.user?.roleName;
     const businessId = req.user?.roleName === 'Super Admin' ? null : req.businessId || null;
-    const updated = await updateUser(id, businessId, validated);
+    const updated = await updateUser(id, businessId, callerRoleName, validated);
     return res.json(updated);
   } catch (err: any) {
     if (err.name === 'ZodError') {
